@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://maestro.local/agent-inspector/output",
+  "title": "Agent Output",
+  "description": "Universal output schema returned by any agent after task execution.",
+  "type": "object",
+  "required": ["task_id", "agent_role", "status", "completed_at", "summary"],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "description": "Must match the task_id from the dispatched task.",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "agent_role": {
+      "type": "string",
+      "enum": ["coder", "auditor", "runner", "engineer", "supervisor", "writer", "reviewer"],
+      "description": "Role of the agent that produced this output."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["completed", "failed", "needs_review"],
+      "description": "Terminal status of the task."
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when the agent finished."
+    },
+    "files_created": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Absolute paths of files created by this agent."
+    },
+    "files_modified": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Absolute paths of files modified by this agent."
+    },
+    "summary": {
+      "type": "string",
+      "description": "1-3 sentence summary of what was done or why it failed."
+    },
+    "issues": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "required": ["severity", "description"],
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": ["CRITICAL", "MAJOR", "MINOR"]
+          },
+          "description": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string",
+            "description": "Optional file:line reference, e.g. 'src/model.py:42'."
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "Issues discovered during execution."
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": true,
+      "default": {},
+      "description": "Free-form metrics (accuracy, loss, runtime_seconds, etc.)."
+    },
+    "next_action": {
+      "type": "string",
+      "description": "Suggested next agent role or action, e.g. 'auditor' or 'runner'."
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,8 @@
+{
+  "id": "H001",
+  "short": "Majority voting over k=15 noisy samplers beats a single sampler on the 300-question synthetic QA benchmark.",
+  "falsifiable_form": "On the seeded benchmark (300 questions, seed 20260702), acc(vote@15) - acc(single sampler) >= 3 percentage points, with paired-bootstrap CI95 excluding 0, under passing positive and negative controls.",
+  "kill_criteria": "delta <= 0 under the preregistered protocol on audit-clean code, or two consecutive INSUFFICIENT verdicts after the harness has passed adversarial audit.",
+  "status": "OPEN",
+  "history": []
+}

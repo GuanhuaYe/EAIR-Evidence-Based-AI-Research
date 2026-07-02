@@ -1,0 +1,40 @@
+### KDD / SIGIR / WWW (acmart) matplotlib style sheet
+
+font.family: serif
+font.serif: Linux Libertine, DejaVu Serif
+text.usetex: False
+
+font.size: 8
+axes.titlesize: 8
+axes.labelsize: 8
+xtick.labelsize: 7
+ytick.labelsize: 7
+legend.fontsize: 7
+
+axes.linewidth: 0.7
+lines.linewidth: 1.1
+patch.linewidth: 0.7
+xtick.major.width: 0.5
+ytick.major.width: 0.5
+
+axes.grid: True
+grid.linewidth: 0.4
+grid.color: D8D8D8
+grid.linestyle: -
+axes.axisbelow: True
+
+axes.spines.top: False
+axes.spines.right: False
+
+legend.frameon: False
+legend.handlelength: 1.4
+
+axes.prop_cycle: cycler('color', ['000000', 'E69F00', '56B4E9', '009E73', 'F0E442', '0072B2', 'D55E00', 'CC79A7'])
+
+figure.dpi: 300
+savefig.dpi: 300
+savefig.format: pdf
+savefig.bbox: tight
+savefig.pad_inches: 0.02
+pdf.fonttype: 42
+ps.fonttype: 42

@@ -1,0 +1,41 @@
+### ACL / EMNLP / NAACL matplotlib style sheet (acl.sty)
+
+font.family: serif
+font.serif: Times, Times New Roman, DejaVu Serif
+text.usetex: False
+
+# Body 11pt; in-figure text 9pt.
+font.size: 9
+axes.titlesize: 9
+axes.labelsize: 9
+xtick.labelsize: 8
+ytick.labelsize: 8
+legend.fontsize: 8
+
+axes.linewidth: 0.8
+lines.linewidth: 1.2
+patch.linewidth: 0.8
+xtick.major.width: 0.6
+ytick.major.width: 0.6
+
+axes.grid: True
+grid.linewidth: 0.4
+grid.color: D0D0D0
+grid.linestyle: -
+axes.axisbelow: True
+
+axes.spines.top: False
+axes.spines.right: False
+
+legend.frameon: False
+legend.handlelength: 1.5
+
+axes.prop_cycle: cycler('color', ['000000', 'E69F00', '56B4E9', '009E73', 'F0E442', '0072B2', 'D55E00', 'CC79A7'])
+
+figure.dpi: 300
+savefig.dpi: 300
+savefig.format: pdf
+savefig.bbox: tight
+savefig.pad_inches: 0.02
+pdf.fonttype: 42
+ps.fonttype: 42

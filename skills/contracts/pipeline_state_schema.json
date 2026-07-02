@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://maestro.local/agent-inspector/pipeline-state",
+  "title": "Pipeline State",
+  "description": "Enhanced PIPELINE_STATE.json format with agent directory tracking for the Inspector architecture.",
+  "type": "object",
+  "required": ["experiment_id", "phase", "updated_at", "agents"],
+  "properties": {
+    "experiment_id": {
+      "type": "string",
+      "description": "Unique experiment identifier, e.g. 'pilot-006-crr'."
+    },
+    "phase": {
+      "type": "string",
+      "enum": ["idea", "coding", "running", "auditing", "writing", "reviewing", "done", "failed"],
+      "description": "Current high-level phase of the pipeline."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time this state file was written."
+    },
+    "idea_doc": {
+      "type": "string",
+      "description": "Path to the idea/design document."
+    },
+    "output_dir": {
+      "type": "string",
+      "description": "Root output directory for this experiment."
+    },
+    "agents": {
+      "type": "object",
+      "description": "Keyed by agent_role. Tracks each agent's task/output lifecycle.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["pending", "dispatched", "running", "completed", "failed", "needs_review"],
+            "description": "Current status of this agent slot."
+          },
+          "task_file": {
+            "type": "string",
+            "description": "Path to the dispatched task JSON (in agents/ dir)."
+          },
+          "output_file": {
+            "type": "string",
+            "description": "Path to the agent's output JSON (in agents/ dir)."
+          },
+          "dispatched_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "attempt": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1,
+            "description": "Retry count for this agent slot."
+          },
+          "issues_summary": {
+            "type": "string",
+            "description": "Brief summary of issues from the latest output, if any."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "history": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "event"],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "event": {
+            "type": "string",
+            "description": "Human-readable event description."
+          },
+          "agent_role": {
+            "type": "string"
+          },
+          "task_id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "Append-only log of pipeline events."
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "gpu_assignment": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Map of agent_role -> CUDA device, e.g. { 'runner': 'cuda:0' }."
+        },
+        "max_total_hours": {
+          "type": "number",
+          "description": "Wall-clock budget for the entire pipeline."
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

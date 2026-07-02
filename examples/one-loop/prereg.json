@@ -1,0 +1,32 @@
+{
+  "hypothesis": "H001",
+  "frozen_before_code": true,
+  "frozen_at": "2026-07-02T09:00:00Z",
+  "design": {
+    "n_questions": 300,
+    "k_samplers": 15,
+    "seed": 20260702,
+    "arms": {
+      "treatment": "vote@15: plurality vote over all 15 samplers",
+      "baseline": "single: mean per-sampler accuracy on the same draws",
+      "ablation": "vote@5: plurality vote over the first 5 samplers",
+      "negative_control": "treatment predictions scored against shuffled labels; must sit at chance",
+      "positive_control": "vote over 15 noiseless samplers; must score exactly 1.0"
+    },
+    "same_seeds_all_arms": true
+  },
+  "primary_metric": "delta = acc(treatment_vote15) - acc(baseline_single)",
+  "uncertainty": "paired bootstrap over questions, 2000 resamples, percentile CI95",
+  "thresholds": {
+    "min_delta": 0.03,
+    "positive_control_exact": 1.0,
+    "negative_control_band": [0.12, 0.28]
+  },
+  "decision_rule": {
+    "PROTOCOL_BROKEN": "positive_control != 1.0 OR negative_control outside negative_control_band; verdict void, fix the harness before interpreting anything",
+    "PROVEN": "delta >= min_delta AND bootstrap CI95 lower bound > 0",
+    "REFUTED": "delta <= 0",
+    "INSUFFICIENT": "anything else: delta positive but below the margin, or CI95 includes 0"
+  },
+  "audit_requirement": "A cross-model adversarial audit must PASS on the harness code before any verdict is acted on. Results produced before a clean audit are advisory only."
+}

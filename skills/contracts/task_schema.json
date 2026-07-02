@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://maestro.local/agent-inspector/task",
+  "title": "Agent Task",
+  "description": "Universal task schema dispatched to any agent in the Inspector architecture.",
+  "type": "object",
+  "required": ["task_id", "agent_role", "created_by", "created_at", "instructions", "output_dir"],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "description": "Unique task identifier, e.g. 'pilot-006-crr-code'.",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "agent_role": {
+      "type": "string",
+      "enum": ["coder", "auditor", "runner", "engineer", "supervisor", "writer", "reviewer"],
+      "description": "Role of the agent receiving this task."
+    },
+    "created_by": {
+      "type": "string",
+      "enum": ["inspector", "supervisor", "runner"],
+      "description": "Which component created this task."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of task creation."
+    },
+    "experiment_id": {
+      "type": "string",
+      "description": "Experiment identifier this task belongs to."
+    },
+    "idea_doc": {
+      "type": "string",
+      "description": "Absolute path to the idea/design document."
+    },
+    "instructions": {
+      "type": "string",
+      "description": "Plain-language instructions for the agent."
+    },
+    "input_files": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Absolute paths the agent should read before starting."
+    },
+    "output_dir": {
+      "type": "string",
+      "description": "Directory where the agent must write its outputs."
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "gpu": {
+          "type": "string",
+          "description": "CUDA device specification, e.g. 'cuda:0'."
+        },
+        "max_hours": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Wall-clock budget in hours."
+        },
+        "timeout_minutes": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Hard timeout per sub-step in minutes."
+        }
+      },
+      "additionalProperties": true
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "failure_history": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Descriptions of prior failures for this task lineage."
+        },
+        "pivot_instruction": {
+          "type": "string",
+          "description": "If retrying after failure, what to do differently."
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

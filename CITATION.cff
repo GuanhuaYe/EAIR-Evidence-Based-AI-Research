@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If EAIR helps your research, please cite it as below."
+title: "EAIR: Evidence-Based AI Research"
+type: software
+authors:
+  - family-names: "Ye"
+    given-names: "Guanhua"
+repository-code: "https://github.com/GuanhuaYe/EAIR"
+license: Apache-2.0
+keywords:
+  - ai4science
+  - research-agents
+  - preregistration
+  - reproducibility
+  - adversarial-audit
+  - claude-code
+version: 0.1.0
+date-released: "2026-07-02"
+abstract: >-
+  EAIR is a research operating system for AI-driven science: multi-agent
+  orchestration with preregistered decision rules, mandatory experiment
+  bundles (treatment, baseline, ablation, controls under one protocol hash),
+  adversarial cross-model audits, an evidence-gated design interrogation
+  gate before GPU dispatch, and an append-only negative-results ledger.
