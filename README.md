@@ -44,8 +44,7 @@ verdict.
 - The user never chats with the conductor. An observer agent answers the
   user from disk artifacts and injects changes only as protocol files at
   experiment boundaries — user remarks mid-run are the LLM version of
-  experimenter demand effects. See
-  [docs/supervision-topology.md](docs/supervision-topology.md).
+  experimenter demand effects. Details below.
 
 ## How it's organized
 
@@ -62,10 +61,71 @@ user ── observer     talks to the user; reads ledgers and briefs,
                      one experiment = one fresh agent
 ```
 
-Layers talk through files with schemas (task specs, structured outputs,
-ledgers), not conversation. User influence enters as protocol files at
-experiment boundaries. Why it's built this way:
-[docs/supervision-topology.md](docs/supervision-topology.md).
+The layering is not about division of labor. It's about keeping the
+conductor's context sterile. A conductor that chats with the user mid-run
+absorbs casual scope changes and — worse — hints about which result the
+user would like. Models are sycophantic; "I feel like the effect should be
+bigger" is often enough to bend an analysis. Behavioral science calls the
+human version experimenter demand effects. Preregistration protects
+verdicts from data-driven bias; keeping the user out of the conductor's
+context protects them from user-driven bias.
+
+So the user talks to the observer, and three channel rules apply:
+
+1. **Read without disturbing.** The observer answers questions from disk
+   artifacts (briefs, ledgers, the knowledge tree); the conductor never
+   learns the question was asked.
+2. **Influence enters as files, at boundaries.** A change of direction
+   becomes an amended task file or config on disk, picked up when the next
+   fresh agent rebuilds its context — never injected into a running
+   agent's conversation.
+3. **Correct by respawn, not conversation.** On a protocol violation the
+   misbehaving agent is killed and a fresh one dispatched with a tightened
+   task file. The only direct message allowed is a content-free wake
+   signal ("the run you were waiting on finished").
+
+Each layer holds only what its decisions need, which keeps every layer in
+the short-context regime where models are sharpest:
+
+| Layer | Decision horizon | Context contains |
+|---|---|---|
+| observer | the whole program + user intent | briefs, ledgers, verdicts |
+| conductor | one pipeline | protocol + pipeline state, no transcripts |
+| worker | one experiment | one task file + pointers, fresh every time |
+
+Every hop between layers is a file with a schema, not a conversation.
+Workers push completion notices to the conductor (control flow needs
+latency); the observer only polls the disk (watching doesn't — and an
+observer nobody knows about can never contaminate anything). Files carry
+trust levels: workers write heartbeats and structured outputs; the
+conductor writes dispatch logs and briefs; the scientific ledger
+(`EVOLUTION.md`, `tree.json`) is written by the conductor alone, and only
+after the audit passes. Unaudited numbers never enter the ledger.
+
+Depth scales with risk: a typo fix needs one agent. Add a conductor when
+one context can't hold a pipeline; add the observer when the pipeline runs
+unattended for hours and you still want to watch and steer safely.
+
+### Escalations work over email
+
+When the conductor hits a stop condition (budget overrun, repeated audit
+failures, anything irreversible), it writes an escalation to disk and
+stops. The observer relays it to you — including by email:
+`conductor/scripts/mail_bridge.py send` mails the decision brief with a
+one-time confirmation code (24h lifetime). You reply from any account and
+copy the code into your reply text. `mail_bridge.py poll` verifies the
+code over IMAP — quoted text is stripped first, so merely echoing the
+original mail does not authenticate — and lands your reply as a file the
+conductor reads at the next experiment boundary. Your words never touch a
+running context, even by email.
+
+### Language
+
+The observer speaks your language (it's the first setup question, and it
+only affects how the system talks to you). Everything below the observer —
+conductor, workers, every on-disk artifact — stays in English, where
+models are strongest and where the record remains readable to any future
+agent regardless of who the user was.
 
 ## See the loop run
 
@@ -131,6 +191,15 @@ Then, in Claude Code:
 `/eair` is the front door; every skill is also directly invocable by name
 (`/big-finding`, `/grill-doc`, `/idea-evaluator`, ...), and plain phrases
 like "grill this experiment design" work too.
+
+Your first `/eair start` runs a one-round setup interview: reporting
+language first (it only affects how the system talks to you), then a local
+GPU probe (`nvidia-smi`) and optional remote cluster, literature-search
+API keys, the email loop described above, git backup with a commit at
+every experiment boundary, dedicated data/model directories, and whether
+the project-intent grilling questions go to the agent (fast) or to you
+(strongest intent alignment). Answers land in `.env` and are never asked
+again.
 
 Tier 2 — full pipeline on one machine. Copy `.env.example` to `.env` if you
 want literature-search APIs and email notification; none of it is required.
