@@ -117,8 +117,8 @@ A bundle is REJECTED if it lacks any of:
 - **Treatment arm(s)** — the hypothesis instantiation
 - **Baseline arm** — minimal/control point of comparison
 - **≥1 ablation arm** — varying ONE confounding variable
-- **Negative control** — should give null result (sanity check)
-- **Positive control (optional but recommended)** — known-good, sanity check
+- **Negative control** — should give null result (validity check)
+- **Positive control (optional but recommended)** — known-good, validity check
 
 All arms MUST share:
 

@@ -49,7 +49,7 @@ more badges: Available / Functional / Reusable / Reproduced / Replicated.
 | Badge | Requirement |
 |---|---|
 | Artifacts Available | Public DOI / URL with permanent identifier |
-| Artifacts Evaluated — Functional | Reviewer can build + run + reproduce sanity check |
+| Artifacts Evaluated — Functional | Reviewer can build + run + reproduce a smoke test |
 | Artifacts Evaluated — Reusable | Reviewer can run on a new (related) input |
 | Results Reproduced | Reviewer reproduces full paper claims with the artifact |
 | Results Replicated | Independent re-implementation matches |
@@ -66,7 +66,7 @@ any reproducibility gap. Tone: same discipline as
   experiment)
 - "Works on my machine" CUDA / Python version mismatch
 - Total runtime > AE reviewer budget (typically 2-3 days)
-- Sanity check that doesn't actually sanity-check (passes without
+- A smoke test that does not actually test anything (passes without
   exercising the core method)
 - Random seeds not set, so results drift between runs
 - Hidden assumptions: undocumented env vars, undocumented input files

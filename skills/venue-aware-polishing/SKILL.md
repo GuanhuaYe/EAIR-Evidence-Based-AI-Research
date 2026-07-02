@@ -6,7 +6,7 @@ description: >-
   per venue family — NeurIPS / ICML / ICLR are compact and
   formal; ACL / EMNLP / NAACL are narrative; SIGMOD / VLDB / ICDE
   are engineering-direct; CVPR / ICCV / ECCV are visual-anchored.
-  Removes AI-tone, em-dashes, hedge tokens, and Chinglish patterns
+  Removes AI-tone, em-dashes, hedge tokens, and L1-interference patterns
   common in non-native English writing. Use when the user says
   'polish this section', 'refine the prose', 'tighten the writing',
   'sound more like a NeurIPS paper', 'rewrite for ACL style', or
@@ -131,7 +131,7 @@ Apply venue-specific transforms:
 - Mild hedges OK in deployment discussion.
 - Section headings: noun-phrases; "Deployment" sections common.
 
-### Stage 4 — Pass 3: Chinglish patterns (universal, last pass)
+### Stage 4 — Pass 3: L1-interference patterns (universal, last pass)
 
 Authors writing English as L2 commonly produce these patterns. Detect
 and rewrite:
@@ -158,7 +158,7 @@ polished/
 ```
 
 Diff file shows every sentence-level change with a reason tag:
-HYGIENE / VENUE-{family} / CHINGLISH / SENTENCE-LENGTH.
+HYGIENE / VENUE-{family} / L1-INTERFERENCE / SENTENCE-LENGTH.
 
 User reviews diff before accepting. Skill MUST NOT write to the
 canonical .tex without user confirmation; produce alongside.
@@ -191,6 +191,6 @@ canonical .tex without user confirmation; produce alongside.
 
 - `references/style_profiles.md` — per-family profile spec
 - `references/banned_tokens.md` — shared with rebuttal-drafter (link)
-- `references/chinglish_patterns.md` — L2-English failure modes
+- `references/l1_interference_patterns.md` — L2-English failure modes
 - `references/heading_register.md` — venue-specific heading
   capitalization and form

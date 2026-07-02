@@ -111,7 +111,7 @@ affected thread. They are evaluated mechanically after every action:
 |----|---------|--------|
 | E1 | 2 consecutive failures on the same pipeline step | upgrade one lane |
 | E2 | New result contradicts an existing ledger entry | upgrade to RED |
-| E3 | Any control or sanity check fails | upgrade to RED |
+| E3 | Any control or validity check fails | upgrade to RED |
 | E4 | Cumulative budget reaches 80% of preapproval | all YELLOW → RED |
 
 Upgrades are sticky per thread until the human clears them. A cleared

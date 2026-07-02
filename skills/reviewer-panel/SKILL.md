@@ -157,7 +157,7 @@ Personas tend to drift soft over time. Apply these calibrations:
   miscalibrated; re-pass with explicit acceptance rate (e.g.,
   NeurIPS ~26%) injected.
 - Maintain `references/calibration_log.md` with score distributions
-  from past panels for sanity check.
+  from past panels as a calibration check.
 
 ## Cross-skill interactions
 

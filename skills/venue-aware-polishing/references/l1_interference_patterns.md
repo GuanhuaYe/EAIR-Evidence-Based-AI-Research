@@ -1,4 +1,4 @@
-# Chinglish patterns — L2-English failure modes
+# L1-interference patterns (Chinese→English) — L2-English failure modes
 
 These patterns appear in papers by Chinese-L1 authors. Stage 4
 detects and rewrites.
@@ -57,7 +57,7 @@ Common error: "The model which we train on dataset X" (no comma) →
 
 Chinese is topic-comment; English is subject-predicate.
 
-| Topic-comment (Chinglish) | Subject-predicate (English) |
+| Topic-comment (L1 interference) | Subject-predicate (English) |
 |---|---|
 | "As for the model, it ..." | "The model ..." |
 | "Regarding the dataset, we ..." | "We use the dataset ..." |
@@ -67,7 +67,7 @@ Chinese is topic-comment; English is subject-predicate.
 ## "However" overuse
 
 "However, " at the start of every other sentence is a common
-Chinglish marker. Detect frequency: if ≥3 in 8 consecutive sentences,
+L1-interference marker. Detect frequency: if ≥3 in 8 consecutive sentences,
 rewrite ≥1 with a different connector ("In contrast", "By contrast",
 "Yet", or restructure as one sentence with "while").
 
@@ -84,21 +84,21 @@ as imprecision.
 ## "Make" overuse
 
 Chinese 让 / 使 maps to "make" too often:
-| Chinglish | English |
+| L1 interference | English |
 |---|---|
 | "X makes Y improve by Z%" | "X improves Y by Z%" |
 | "This makes the model more robust" | "This improves model robustness" or restructure with concrete metric |
 
 ## "More than" comparative confusion
 
-| Chinglish | English |
+| L1 interference | English |
 |---|---|
 | "X is more better than Y" | "X is better than Y" |
 | "Y is much more faster" | "Y is much faster" |
 
 ## Number-noun agreement
 
-| Chinglish | English |
+| L1 interference | English |
 |---|---|
 | "3 dataset" | "3 datasets" |
 | "10 model" | "10 models" |

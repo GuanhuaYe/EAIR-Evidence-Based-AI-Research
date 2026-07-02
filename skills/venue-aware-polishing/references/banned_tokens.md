@@ -48,9 +48,9 @@ For all families, strip:
 - "it is worth noting that" → delete
 - "as previously mentioned" → delete
 
-## L2-English markers (Chinglish — Stage 4)
+## L2-English markers (L1 interference — Stage 4)
 
-See `chinglish_patterns.md` for the full list.
+See `l1_interference_patterns.md` for the full list.
 
 ## Quantification mandate
 
