@@ -9,7 +9,10 @@ Env (set in .env):
   MAESTRO_SMTP_HOST / MAESTRO_SMTP_PORT (SSL, default 465)
   MAESTRO_SMTP_USER / MAESTRO_SMTP_PASS   sender account
   MAESTRO_IMAP_HOST                       default: smtp host with imap. prefix
-  MAESTRO_NOTIFY_EMAIL                    the human's address
+  MAESTRO_NOTIFY_EMAIL                    the human's address; ONLY replies
+                                          whose From matches it are accepted
+  MAESTRO_ESC_TTL_HOURS                   token lifetime (default 24); expired
+                                          escalations are marked, not read
 
 Usage:
   mail_bridge.py send  --project-dir DIR --subject "..." --body "..." [--body-file F]
@@ -22,7 +25,7 @@ Usage:
 
 Cron the poll (e.g. every 5 min) or run it from a watcher loop.
 """
-import argparse, email, imaplib, json, os, smtplib, sys, uuid
+import argparse, email, imaplib, json, os, smtplib, sys, time, uuid
 from email.header import Header, decode_header
 from email.mime.text import MIMEText
 from email.utils import formataddr
@@ -65,7 +68,8 @@ def cmd_send(args):
     esc_dir = Path(args.project_dir) / "escalations"
     esc_dir.mkdir(parents=True, exist_ok=True)
     (esc_dir / f"{token}.json").write_text(json.dumps(
-        {"token": token, "subject": args.subject, "status": "pending"}, indent=2))
+        {"token": token, "subject": args.subject, "status": "pending",
+         "created_at": int(time.time())}, indent=2))
     print(token)
 
 
@@ -100,12 +104,19 @@ def _subject(m):
 
 def cmd_poll(args):
     c = smtp_cfg()
+    ttl_s = float(env("MAESTRO_ESC_TTL_HOURS", "24")) * 3600
     esc_dir = Path(args.project_dir) / "escalations"
     pending = []
     for f in sorted(esc_dir.glob("ESC-*.json")) if esc_dir.is_dir() else []:
         rec = json.loads(f.read_text())
-        if rec.get("status") == "pending":
-            pending.append((f, rec))
+        if rec.get("status") != "pending":
+            continue
+        if time.time() - rec.get("created_at", 0) > ttl_s:
+            rec["status"] = "expired"
+            f.write_text(json.dumps(rec, indent=2))
+            print(f"{rec['token']}: expired (> {ttl_s/3600:.0f}h); conductor should re-escalate")
+            continue
+        pending.append((f, rec))
     if not pending:
         sys.exit(3)
     M = _imap_connect(c)
@@ -121,8 +132,13 @@ def cmd_poll(args):
             m = email.message_from_bytes(md[0][1])
             if not _subject(m).lower().startswith("re:"):
                 continue
+            sender = email.utils.parseaddr(m.get("From", ""))[1].lower()
+            if sender != c["to"].lower():
+                print(f"{token}: REJECTED reply from unauthorized sender {sender!r}")
+                continue
             (esc_dir / f"{token}-reply.md").write_text(
-                f"# Reply to {token} — {rec['subject']}\n\n{_plain_body(m)}\n")
+                f"# Reply to {token} — {rec['subject']}\n"
+                f"# from: {sender}  date: {m.get('Date','?')}\n\n{_plain_body(m)}\n")
             rec["status"] = "answered"
             f.write_text(json.dumps(rec, indent=2))
             landed += 1
