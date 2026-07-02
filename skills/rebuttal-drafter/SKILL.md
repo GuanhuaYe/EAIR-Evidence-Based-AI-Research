@@ -1,7 +1,7 @@
 ---
 name: rebuttal-drafter
 description: >-
-  Drafts point-by-point reviewer responses for CCF A AI/DB venues
+  Drafts point-by-point reviewer responses for top-tier AI/DB venues
   (NeurIPS / ICML / ICLR / ACL / EMNLP / NAACL / AAAI / IJCAI /
   CVPR / ICCV / ECCV / ACM MM / SIGMOD / VLDB / ICDE / KDD / SIGIR
   / WWW). Parses reviewer comments into a triage table, classifies
@@ -33,7 +33,7 @@ order, never fabricate, respect the venue's hard character budget.
 - Reviewer comments are pasted or pointed to (`reviews/*.txt`, OpenReview
   thread, EasyChair export, Microsoft CMT JSON).
 - User mentions "rebuttal phase", "author response", "shepherd letter",
-  "discussion period", or a CCF A venue's known rebuttal window.
+  "discussion period", or a top venue's known rebuttal window.
 - Maestro's pipeline has reached a venue's rebuttal stage and the
   Reviewer agent has flagged reviewer comments inbound.
 
@@ -163,7 +163,7 @@ rebuttal/
 
 ## References
 
-- `references/venue_limits.md` — character/word caps per CCF A venue
+- `references/venue_limits.md` — character/word caps per top venue
 - `references/banned_tokens.md` — full banned-word list (mirrors
   pre-submission-reviewer for consistency)
 - `references/defense_templates.md` — concession-objection-evidence

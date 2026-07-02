@@ -1,4 +1,4 @@
-# Rebuttal/Response Hard Limits per CCF A Venue
+# Rebuttal/Response Hard Limits per Venue
 
 These are the **author-response budgets** for the rebuttal/discussion
 phase. Confirm against the current call for papers — limits drift

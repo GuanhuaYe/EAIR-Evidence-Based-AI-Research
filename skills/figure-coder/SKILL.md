@@ -2,7 +2,7 @@
 name: figure-coder
 description: >-
   Generates publication-grade figure code (matplotlib / TikZ /
-  Plotly / R-ggplot2) for CCF A venues, with venue-aware defaults:
+  Plotly / R-ggplot2) for top-tier venues, with venue-aware defaults:
   column widths, font sizes, color-blind-safe palettes, vector
   output (PDF / EPS), no rasterized text. Complements
   figure-designer — figure-designer decides 'what to draw',

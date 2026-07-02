@@ -1,7 +1,7 @@
 ---
 name: venue-aware-polishing
 description: >-
-  Polishes English prose for a specific CCF A venue's house style.
+  Polishes English prose for a specific top venue's house style.
   Selects the right register, sentence shape, and vocabulary band
   per venue family — NeurIPS / ICML / ICLR are compact and
   formal; ACL / EMNLP / NAACL are narrative; SIGMOD / VLDB / ICDE

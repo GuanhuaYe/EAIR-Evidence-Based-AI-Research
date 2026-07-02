@@ -18,7 +18,7 @@ license: CC-BY-4.0
 ## Overview
 
 Fabricated and misattributed citations are a known reviewer kill at
-CCF A venues. LLM-assisted writing has made this risk worse — a
+top venues. LLM-assisted writing has made this risk worse — a
 plausible-sounding "Smith et al. 2023 showed that ..." can be entirely
 hallucinated, or attached to a real paper that does not actually make
 the claim. This skill runs two independent passes: a bibtex sanity

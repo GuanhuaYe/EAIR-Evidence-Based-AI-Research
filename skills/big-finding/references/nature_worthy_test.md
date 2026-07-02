@@ -1,5 +1,9 @@
 # Nature-worthy test (the 6-condition gate)
 
+The name is the bar the gate aims at, not a claim about any result that
+passes it. It exists to keep "better on one benchmark" out of the
+findings catalogue.
+
 A PROVEN node passes this gate iff ALL SIX conditions hold.
 
 ## Condition 0 (NEW): Cross-validated, not single-split

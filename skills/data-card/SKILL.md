@@ -1,7 +1,7 @@
 ---
 name: data-card
 description: >-
-  Drafts the reproducibility apparatus required by CCF A venues:
+  Drafts the reproducibility apparatus required by top venues:
   dataset card (datasheet for datasets), reproducibility checklist
   (NeurIPS-style or per-venue), code-release statement, model card
   (when models are released), data availability statement, and

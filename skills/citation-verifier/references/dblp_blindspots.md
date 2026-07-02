@@ -1,6 +1,6 @@
 # DBLP blindspots — venues to suppress LIKELY-HALLUCINATED for
 
-DBLP indexes most CCF venues, but some legitimate publication
+DBLP indexes most major CS venues, but some legitimate publication
 channels are not in DBLP or are indexed late. Treat papers in these
 channels as "exists" if Semantic Scholar OR arXiv confirms them,
 even when DBLP returns nothing.
