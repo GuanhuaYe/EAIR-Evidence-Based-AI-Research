@@ -10,7 +10,7 @@ Every bundle MUST contain:
 1. **≥1 treatment arm** — the hypothesis instantiation
 2. **≥1 baseline arm** — minimal/no-op comparison
 3. **≥1 ablation arm** — varies ONE confounding variable
-4. **≥1 negative control** — should produce null result (sanity)
+4. **≥1 negative control** — should produce null result (validity)
 5. **≥0 positive control** — known-good (recommended, not required)
 
 Minimum bundle size: 4 arms.

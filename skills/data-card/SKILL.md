@@ -158,7 +158,7 @@ Package contents:
 - Datasets included or download script
 - Expected runtime per experiment
 - Mapping: each table/figure in paper → script command to reproduce it
-- Sanity-check run that completes in <10 min
+- Smoke-test run that completes in <10 min
 
 Output: `data_card/artifact_evaluation/` directory tree.
 

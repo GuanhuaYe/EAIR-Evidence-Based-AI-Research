@@ -18,7 +18,7 @@ Format per row:
 |---|---|---|---|---|---|---|---|---|
 | _initial_ | — | — | — | — | — | — | — | template row, ignore |
 
-## Sanity rules
+## Calibration rules
 
 After 5+ entries:
 - If panel mean is consistently >2 points above actual reviewer mean,

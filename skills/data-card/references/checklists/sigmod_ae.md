@@ -13,7 +13,7 @@ more badges: Available / Functional / Reusable / Reproduced / Replicated.
 - Hardware / OS requirements (CPU model, RAM, disk, GPU model if any)
 - Software dependencies (versions pinned)
 - Estimated total runtime to reproduce all paper results
-- Sanity-check run (≤10 min) with expected output
+- Smoke-test run (≤10 min) with expected output
 
 ### Build / install
 
