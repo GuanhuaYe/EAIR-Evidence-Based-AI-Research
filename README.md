@@ -145,10 +145,9 @@ running context, even by email.
 
 ### The clock never hallucinates
 
-LLMs have no internal clock. Left to themselves they estimate timestamps,
-invent ETAs, and forget promises to "check back in ten minutes" — we
-watched a conductor write `03:25` in its log at `01:42` wall time. So time
-is not an LLM job here. `conductor/scripts/pulse.py` is a plain cron
+LLMs have no internal clock. Any timestamp, ETA, or "I'll check back in
+ten minutes" they produce without an external anchor is fabrication. So
+time is not an LLM job here. `conductor/scripts/pulse.py` is a plain cron
 process that ticks every two minutes: it records observed liveness to
 `PULSE.jsonl` (newest file mtimes per experiment, GPU utilization, tmux
 sessions — measured, not self-reported) and checks a ledger of deadlines
