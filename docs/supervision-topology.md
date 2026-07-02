@@ -129,10 +129,12 @@ answer, translates it into a protocol artifact, and the next fresh context
 picks it up from disk. The user's words never touch the conductor.
 
 This works over email too: `maestro/scripts/mail_bridge.py send` mails the
-escalation with a token in the subject; the user just replies to the email;
-`mail_bridge.py poll` finds the reply over IMAP and writes it to
-`<project>/escalations/<token>-reply.md`. The human's decision arrives as a
-file at a boundary — the same channel discipline as everything else.
+escalation with a one-time confirmation code (24h lifetime); the user
+replies — from any account — and copies the code into the reply text;
+`mail_bridge.py poll` verifies the code over IMAP (quoted text is stripped,
+so merely echoing the original does not authenticate) and writes the reply
+to `<project>/escalations/<token>-reply.md`. The human's decision arrives
+as a file at a boundary — the same channel discipline as everything else.
 
 ## Language policy
 

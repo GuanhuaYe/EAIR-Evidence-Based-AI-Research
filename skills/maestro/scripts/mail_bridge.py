@@ -9,10 +9,16 @@ Env (set in .env):
   MAESTRO_SMTP_HOST / MAESTRO_SMTP_PORT (SSL, default 465)
   MAESTRO_SMTP_USER / MAESTRO_SMTP_PASS   sender account
   MAESTRO_IMAP_HOST                       default: smtp host with imap. prefix
-  MAESTRO_NOTIFY_EMAIL                    the human's address; ONLY replies
-                                          whose From matches it are accepted
-  MAESTRO_ESC_TTL_HOURS                   token lifetime (default 24); expired
-                                          escalations are marked, not read
+  MAESTRO_NOTIFY_EMAIL                    the human's address (recipient)
+  MAESTRO_ESC_TTL_HOURS                   confirmation-code lifetime (default
+                                          24h); expired escalations are marked
+                                          for re-escalation, never read
+
+Auth model: each escalation mail carries a long one-time CONFIRMATION CODE.
+A reply is accepted only if the code appears in the reply's own text
+(quoted/forwarded sections are stripped first, so a bare reply that merely
+echoes the original does NOT authenticate). Sender address is recorded for
+audit but not required — you can reply from any account that has the code.
 
 Usage:
   mail_bridge.py send  --project-dir DIR --subject "..." --body "..." [--body-file F]
@@ -25,7 +31,7 @@ Usage:
 
 Cron the poll (e.g. every 5 min) or run it from a watcher loop.
 """
-import argparse, email, imaplib, json, os, smtplib, sys, time, uuid
+import argparse, email, imaplib, json, os, re, secrets, smtplib, sys, time
 from email.header import Header, decode_header
 from email.mime.text import MIMEText
 from email.utils import formataddr
@@ -51,12 +57,19 @@ def smtp_cfg():
 
 def cmd_send(args):
     c = smtp_cfg()
-    token = "ESC-" + uuid.uuid4().hex[:8]
+    token = "ESC-" + secrets.token_hex(4)
+    code = secrets.token_hex(16)
+    pretty = "-".join(code[i:i+4] for i in range(0, len(code), 4))
     subject = f"[{token}] {args.subject}"
     body = args.body or ""
     if args.body_file:
         body += "\n\n" + Path(args.body_file).read_text()
-    body += "\n\n--\nReply to this email; your reply text will be delivered to the pipeline at the next experiment boundary."
+    body += (f"\n\nCONFIRMATION CODE (valid {env('MAESTRO_ESC_TTL_HOURS', '24')}h):\n"
+             f"    {pretty}\n"
+             "To authorize your decision, reply to this email and COPY THE CODE "
+             "into your reply text. A reply without the code (or with the code "
+             "only in the quoted original) is ignored. Your reply text is "
+             "delivered to the pipeline at the next experiment boundary.")
     msg = MIMEText(body, "plain", "utf-8")
     msg["From"] = formataddr(("EAIR", c["user"]))
     msg["To"] = c["to"]
@@ -68,8 +81,8 @@ def cmd_send(args):
     esc_dir = Path(args.project_dir) / "escalations"
     esc_dir.mkdir(parents=True, exist_ok=True)
     (esc_dir / f"{token}.json").write_text(json.dumps(
-        {"token": token, "subject": args.subject, "status": "pending",
-         "created_at": int(time.time())}, indent=2))
+        {"token": token, "code": code, "subject": args.subject,
+         "status": "pending", "created_at": int(time.time())}, indent=2))
     print(token)
 
 
@@ -93,6 +106,27 @@ def _plain_body(m):
                 return (p.get_payload(decode=True) or b"").decode("utf-8", "replace")
         return ""
     return (m.get_payload(decode=True) or b"").decode("utf-8", "replace")
+
+
+def _unquoted_text(body):
+    """Drop quoted/forwarded material so the code must be in the reply itself."""
+    out = []
+    for line in body.splitlines():
+        l = line.strip()
+        if l.startswith(">"):
+            continue
+        if (re.match(r"^On .{0,120} wrote:\s*$", l)
+                or l.startswith("-----Original Message-----")
+                or l.startswith("---- Replied Message ----")
+                or l.startswith("发件人")
+                or l == "--"):
+            break
+        out.append(line)
+    return "\n".join(out)
+
+
+def _norm(s):
+    return re.sub(r"[\s\-]", "", s).lower()
 
 
 def _subject(m):
@@ -132,13 +166,14 @@ def cmd_poll(args):
             m = email.message_from_bytes(md[0][1])
             if not _subject(m).lower().startswith("re:"):
                 continue
-            sender = email.utils.parseaddr(m.get("From", ""))[1].lower()
-            if sender != c["to"].lower():
-                print(f"{token}: REJECTED reply from unauthorized sender {sender!r}")
+            body = _plain_body(m)
+            if _norm(rec["code"]) not in _norm(_unquoted_text(body)):
+                print(f"{token}: reply found but confirmation code absent from reply text — ignored")
                 continue
+            sender = email.utils.parseaddr(m.get("From", ""))[1].lower()
             (esc_dir / f"{token}-reply.md").write_text(
                 f"# Reply to {token} — {rec['subject']}\n"
-                f"# from: {sender}  date: {m.get('Date','?')}\n\n{_plain_body(m)}\n")
+                f"# from: {sender}  date: {m.get('Date','?')}  auth: confirmation code matched\n\n{body}\n")
             rec["status"] = "answered"
             f.write_text(json.dumps(rec, indent=2))
             landed += 1

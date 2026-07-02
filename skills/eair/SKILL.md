@@ -46,11 +46,13 @@ doesn't match a subcommand, ask which one they meant and show the table:
    - **Email loop**: progress notifications wanted? If yes, collect SMTP
      settings, send a test mail via
      `maestro/scripts/mail_bridge.py send`, and explain the reply-back
-     channel: escalation mails carry a token; the user just replies to
-     the email; `mail_bridge.py poll` (cron or watcher) lands the reply
-     text in `<project>/escalations/<token>-reply.md`, where the
-     conductor reads it at the next experiment boundary. Human decisions
-     arrive as files, never as chat.
+     channel: escalation mails carry a one-time confirmation code (24h
+     TTL); the user replies from any account and copies the code into
+     the reply text; `mail_bridge.py poll` (cron or watcher) verifies
+     the code (quoted text stripped) and lands the reply in
+     `<project>/escalations/<token>-reply.md`, where the conductor
+     reads it at the next experiment boundary. Human decisions arrive
+     as files, never as chat.
    - **Git**: use git for backup and rollback? If yes: init the project
      repo, commit at every experiment boundary (post-verdict), tag
      decision points so any experiment state can be recovered.
