@@ -41,6 +41,11 @@ verdict.
   closed. The next experiment starts clean, rebuilt from the tree and
   ledger. A small fresh context keeps the model sharp, and an agent that
   never saw experiment N-1 can't steer experiment N toward consistency.
+- The user never chats with the conductor. An observer agent answers the
+  user from disk artifacts and injects changes only as protocol files at
+  experiment boundaries — user remarks mid-run are the LLM version of
+  experimenter demand effects. See
+  [docs/supervision-topology.md](docs/supervision-topology.md).
 
 ## See the loop run
 
