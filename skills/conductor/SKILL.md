@@ -83,6 +83,8 @@ Log dispatch to CONDUCTOR_LOG.json
 
 **Heartbeat convention (observability):** every dispatched agent appends one JSON line per stage to `{project_root}/HEARTBEAT.jsonl` — `{"ts","agent","experiment","event"}`. Append-only, unaudited, read by the observer layer only; never a substitute for output.json, never a source for the ledger.
 
+**Fix-round dispatch guidance:** resumed workers are fragile — a resumed agent often stops after one short turn, leaving the fix half-applied. For audit fix rounds, PREFER dispatching a FRESH worker carrying (a) the audit finding IDs and required fixes, (b) a done/not-done checklist of what the previous worker already completed (verify against disk, not against its claims), and (c) pointers to the existing code and outputs. This is still within-experiment work and fully allowed; reserve resume for immediate, small continuations. After ANY worker stops, verify its claimed outputs exist on disk before waiting on it.
+
 **On return:** read output.json → PASS→next step | FAIL+CRITICAL→Coder fix→re-audit | FAIL×2→REVISE/ABANDON. Log result.
 
 ## Cross-Model Review
