@@ -104,7 +104,13 @@ def check_alarms(project, tick_ts):
             within = float(cond.get("within_min", 20)) * 60
             m = newest_mtime(target) if os.path.isdir(target) else (
                 os.path.getmtime(target) if os.path.exists(target) else 0)
-            stale = (now.timestamp() - m) > within
+            # grace period: staleness counts from registration, not from an
+            # mtime that was already old when the alarm was armed
+            try:
+                reg = datetime.fromisoformat(alarm["registered_at"]).timestamp()
+            except (KeyError, ValueError):
+                reg = 0
+            stale = (now.timestamp() - max(m, reg)) > within
 
         deadline = None
         try:
