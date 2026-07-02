@@ -1,4 +1,4 @@
-# Rating scales and decision lexicon per CCF A venue
+# Rating scales and decision lexicon per venue
 
 Confirm against current call for papers — venues update their scales
 year-to-year.

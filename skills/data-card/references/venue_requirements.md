@@ -1,4 +1,4 @@
-# What each CCF A venue requires
+# What each venue requires
 
 Confirm against the current call for papers — venues update these
 year-to-year.

@@ -19,7 +19,7 @@ license: CC-BY-4.0
 
 ## Overview
 
-CCF A venues increasingly require explicit reproducibility apparatus:
+Top venues increasingly require explicit reproducibility apparatus:
 NeurIPS has a 14-question reproducibility checklist and a 25-question
 datasets&benchmarks track; ACL ARR has the responsible NLP checklist;
 SIGMOD/VLDB/KDD run formal Artifact Evaluation tracks; ICLR has open-

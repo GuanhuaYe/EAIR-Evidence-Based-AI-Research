@@ -1,7 +1,7 @@
 ---
 name: reviewer-panel
 description: >-
-  Simulates a CCF A conference review panel — three independent
+  Simulates a top-venue conference review panel — three independent
   reviewers with distinct personas (theory hawk, empirical
   pragmatist, narrative skeptic) plus an Area Chair meta-review —
   on a draft paper or section. Uses the venue's actual rating scale
@@ -20,7 +20,7 @@ license: CC-BY-4.0
 
 ## Overview
 
-CCF A papers are decided by 3 reviewers plus an area chair / meta-
+Papers at top venues are decided by 3 reviewers plus an area chair / meta-
 reviewer who weighs the panel. A single-perspective copy-edit review
 (handled by `pre-submission-reviewer`) does not surface the divergent
 objections a real panel raises. This skill fans out three independent
@@ -178,6 +178,6 @@ Personas tend to drift soft over time. Apply these calibrations:
 - `references/persona_prompts.md` — system prompts per persona,
   with section-assignment rules.
 - `references/venue_scales.md` — rating scales, acceptance
-  thresholds, decision lexicon per CCF A venue.
+  thresholds, decision lexicon per venue.
 - `references/calibration_log.md` — score distributions from prior
   panels (append-only).
