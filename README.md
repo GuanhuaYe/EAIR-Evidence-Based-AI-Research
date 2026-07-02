@@ -123,8 +123,8 @@ trust levels: workers write heartbeats and structured outputs; the
 conductor writes dispatch logs and briefs; the scientific ledger
 (`EVOLUTION.md`, `tree.json`) is written by the conductor alone, and only
 after the audit passes. These are the evidence levels from the table
-above, enforced as file permissions: unaudited numbers never enter the
-ledger.
+above, enforced by protocol and checked by the observer: unaudited
+numbers never enter the ledger.
 
 Depth scales with risk: a typo fix needs one agent. Add a conductor when
 one context can't hold a pipeline; add the observer when the pipeline runs
