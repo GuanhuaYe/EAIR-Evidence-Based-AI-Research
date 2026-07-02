@@ -6,10 +6,12 @@ layers:
 
 ```
 user ── observer (talks to the user, only observes the system)
-            │ reads artifacts on disk; writes protocol artifacts at boundaries
+            │ reads disk artifacts of EVERY layer below (polling);
+            │ writes protocol artifacts at boundaries
             ▼
         conductor (Maestro, unattended; context contains protocol + disk state, nothing else)
-            │ dispatches, one experiment = one fresh agent
+            │ dispatches, one experiment = one fresh agent;
+            │ workers push completion back to it directly
             ▼
         workers (Coder, Auditor, Runner, ... — fresh context per experiment)
 ```
@@ -73,9 +75,41 @@ in the model's short-context regime where quality is highest:
 
 A worker never sees another experiment's transcript (that's principle 4).
 The conductor never reads worker transcripts, only structured outputs. The
-observer never reads the conductor's transcript, only its disk artifacts.
-Every hop between layers is a file with a schema, not a conversation — this
-is what stops the topology from degrading into a game of telephone.
+observer never reads anyone's transcript — it reads the disk artifacts of
+every layer, workers included. Every hop between layers is a file with a
+schema, not a conversation — this is what stops the topology from degrading
+into a game of telephone.
+
+## Two channels: push for control, poll for observability
+
+Control flow and observability have different latency needs, so they use
+different channels:
+
+- **Workers push to the conductor.** When a worker finishes or fails, the
+  conductor must react immediately (audit, retry, dispatch the next step).
+  Completion notifications go directly to the conductor — this is the only
+  push channel in the system.
+- **The observer polls the disk.** Watching a run does not need millisecond
+  latency, and keeping the observer pull-only has a discipline benefit: no
+  agent in the system needs to know the observer exists, so the observer
+  can never become a contamination source.
+
+## The file trust gradient
+
+Workers do NOT write the scientific ledger directly. Files have trust
+levels, and who may write what is part of the protocol:
+
+| File | Written by | When | Trust level |
+|---|---|---|---|
+| `HEARTBEAT.jsonl` | workers, append-only | during a run, one line per stage (timestamp, agent, experiment, event) | low — unaudited, observability only |
+| `agents/<role>/output.json` | worker | end of task | medium — the structured contract the conductor acts on |
+| dispatch log, status brief | conductor | every dispatch / verdict | medium-high |
+| `EVOLUTION.md`, `tree.json` | conductor only, after audit passes and the verdict is applied | decision time | highest — the scientific record |
+
+The rule "unaudited results never enter the ledger" is why workers can't
+write `EVOLUTION.md`: mid-run progress is observability, not science. The
+observer reads every level but weighs each by its trust: heartbeat numbers
+answer "how far along is it", never "what was found".
 
 ## When not to use four layers
 
