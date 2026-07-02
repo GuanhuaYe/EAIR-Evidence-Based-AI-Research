@@ -128,6 +128,22 @@ ends its turn. The observer relays the decision brief to the user, gets an
 answer, translates it into a protocol artifact, and the next fresh context
 picks it up from disk. The user's words never touch the conductor.
 
+This works over email too: `maestro/scripts/mail_bridge.py send` mails the
+escalation with a token in the subject; the user just replies to the email;
+`mail_bridge.py poll` finds the reply over IMAP and writes it to
+`<project>/escalations/<token>-reply.md`. The human's decision arrives as a
+file at a boundary — the same channel discipline as everything else.
+
+## Language policy
+
+The observer speaks whatever language the user prefers (it is the first
+question of the first-run interview). Everything below the observer — the
+conductor, the workers, task files, ledgers, briefs, decision documents —
+stays in English, where current models are strongest and where every
+on-disk artifact stays readable to any future agent regardless of who the
+user was. Translation happens at the observer boundary, in both directions,
+like everything else that crosses it.
+
 Related: `skills/big-finding/SKILL.md` (principle 4, one experiment one
 agent), `skills/research-autonomy-contract/SKILL.md` (which actions may
 proceed without asking a human).

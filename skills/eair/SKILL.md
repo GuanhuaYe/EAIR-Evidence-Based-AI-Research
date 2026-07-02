@@ -28,9 +28,42 @@ doesn't match a subcommand, ask which one they meant and show the table:
 
 ## /eair start <topic>
 
-1. Ask (once, batched) anything genuinely missing: target venue or "no
-   venue, discovery only"; compute available (none / local GPU / remote
-   over SSH); rough time budget.
+1. **First-run interview** (skip questions already answered in `.env` /
+   `~/.eair/config`; batch the rest into ONE round, don't drip-feed):
+   - **Language — always the first question**: which language should
+     user-facing reporting use? Ask it in the language the user is
+     already typing, then conduct the rest of the interview in their
+     choice. The observer speaks the user's language; the conductor,
+     workers, and all on-disk protocol artifacts stay in English, where
+     models perform best.
+   - **Compute**: probe local GPUs first (`nvidia-smi`), report what you
+     found, then ask about a remote GPU cluster (ssh alias, test it with
+     `ssh <alias> nvidia-smi`). No GPU at all is fine — offer API-only
+     mode (inference experiments through LLM APIs).
+   - **Literature APIs**: Semantic Scholar / SerpAPI keys for novelty
+     checks and citation verification (optional, degrade gracefully).
+   - **Email loop**: progress notifications wanted? If yes, collect SMTP
+     settings, send a test mail via
+     `maestro/scripts/mail_bridge.py send`, and explain the reply-back
+     channel: escalation mails carry a token; the user just replies to
+     the email; `mail_bridge.py poll` (cron or watcher) lands the reply
+     text in `<project>/escalations/<token>-reply.md`, where the
+     conductor reads it at the next experiment boundary. Human decisions
+     arrive as files, never as chat.
+   - **Git**: use git for backup and rollback? If yes: init the project
+     repo, commit at every experiment boundary (post-verdict), tag
+     decision points so any experiment state can be recovered.
+   - **Paths**: dedicated directories for datasets and model weights
+     (shared mounts, scratch disks) instead of the home directory —
+     record as `SHARED_MODELS_DIR` / `SHARED_DATA_DIR`.
+   - **Intent grilling mode**: before the pipeline starts, the project
+     intent gets grilled. Default: the agent answers the interrogation
+     from the user's inputs (fast). Option: the questions go to the USER
+     directly — slower, but buys the strongest human-AI intent alignment.
+     Offer the choice explicitly.
+   - Also ask: target venue or "no venue, discovery only"; rough time
+     budget. Write everything to `.env` + the project config, so the
+     interview never repeats.
 2. Scaffold the project root:
    ```
    <project>/
