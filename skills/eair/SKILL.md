@@ -53,13 +53,6 @@ doesn't match a subcommand, ask which one they meant and show the table:
      `<project>/escalations/<token>-reply.md`, where the conductor
      reads it at the next experiment boundary. Human decisions arrive
      as files, never as chat.
-   - **Clock**: offer to install the pulse tick —
-     `*/2 * * * * python3 <skills>/conductor/scripts/pulse.py
-     --project-dir <project> [--gpu-host <alias>]` in the user's crontab.
-     This is the system's only time authority: it records observed
-     liveness to `PULSE.jsonl` and fires registered deadline alarms to
-     `ALARMS.jsonl`. Without it, stall detection falls back to
-     session-bound watchers that die with the session.
    - **Git**: use git for backup and rollback? If yes: init the project
      repo, commit at every experiment boundary (post-verdict), tag
      decision points so any experiment state can be recovered.
@@ -81,8 +74,18 @@ doesn't match a subcommand, ask which one they meant and show the table:
      EVOLUTION.md        # ledger header + comparability rules + empty veto list
      CONDUCTOR_LOG.json    # {"entries": []}
      HEARTBEAT.jsonl     # empty
+     alarms/pending/     # deadline ledger read by the clock
      experiments/
    ```
+   Then start the clock — not a question, part of the scaffold:
+   ```
+   */2 * * * * python3 <skills>/conductor/scripts/pulse.py --project-dir <project> [--gpu-host <alias>]
+   ```
+   goes into the user's crontab (mention it in the scaffold summary; skip
+   only if `EAIR_NO_PULSE=1`). pulse is the system's only time authority:
+   it records observed liveness to `PULSE.jsonl` and fires registered
+   deadline alarms to `ALARMS.jsonl`. Every timestamp anywhere in the
+   project traces to a machine clock, never to a model's guess.
 3. Fill an autonomy contract with the user (see
    `research-autonomy-contract` skill) so unattended stretches have
    defined escalation rules.
