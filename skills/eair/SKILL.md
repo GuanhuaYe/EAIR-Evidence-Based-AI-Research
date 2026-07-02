@@ -120,8 +120,7 @@ If the project has no audited results, say so and point to `/eair find`.
 - The individual skills are also directly invocable (`/big-finding`,
   `/grill-doc`, `/idea-evaluator`, ...); this command is a router, not a
   replacement.
-- Follow the supervision topology (`docs/supervision-topology.md` in the
-  repo): fresh agent per experiment, structured files between layers,
+- Follow the supervision topology (README, "How it's organized"): fresh agent per experiment, structured files between layers,
   unaudited numbers never enter `EVOLUTION.md`.
 - When a subcommand needs a long-running unattended conductor, offer it
   explicitly ("run unattended and report at gates?") rather than assuming.
