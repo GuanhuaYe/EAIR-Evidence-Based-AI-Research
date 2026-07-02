@@ -80,6 +80,8 @@ Agent(model=M, run_in_background=true,
 Log dispatch to MAESTRO_LOG.json
 ```
 
+**Heartbeat convention (observability):** every dispatched agent appends one JSON line per stage to `{project_root}/HEARTBEAT.jsonl` — `{"ts","agent","experiment","event"}`. Append-only, unaudited, read by the observer layer only; never a substitute for output.json, never a source for the ledger.
+
 **On return:** read output.json → PASS→next step | FAIL+CRITICAL→Coder fix→re-audit | FAIL×2→REVISE/ABANDON. Log result.
 
 ## Cross-Model Review
