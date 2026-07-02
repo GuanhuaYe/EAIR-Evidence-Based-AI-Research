@@ -23,10 +23,10 @@ You write code on **the control host** (`$PROJECT_ROOT/{idea_id}/code/`). Claude
 Before writing `pip install ...` in a setup script, `requirements.txt` entry, or any model-loading code:
 
 1. **Read** `$PROJECT_ROOT/.shared_inventory.md` to see (a) which models are already on gpu-host, (b) which Python venvs exist with which package versions
-2. If a conda env already has `vllm==X transformers==Y torch==Z` matching your needs → use it: `ssh gpu-host "source ~/miniforge3/etc/profile.d/conda.sh && conda activate $SHARED_ENVS_DIR/<env> && python ..."` (or `~/miniforge3/etc/profile.d/conda.sh` then `conda activate ~/miniforge3/envs/<env>` for personal envs)
-3. If your model is in `$SHARED_MODELS_DIR/`, reference its absolute path in your code, do NOT trigger HF download from cache miss
+2. If a conda env already has `vllm==X transformers==Y torch==Z` matching your needs → use it: `ssh gpu-host "source ~/miniforge3/etc/profile.d/conda.sh && conda activate $ENVS_DIR/<env> && python ..."` (or `~/miniforge3/etc/profile.d/conda.sh` then `conda activate ~/miniforge3/envs/<env>` for personal envs)
+3. If your model is in `$MODELS_DIR/`, reference its absolute path in your code, do NOT trigger HF download from cache miss
 4. **NEVER** suggest `python -m venv` -- this is a multi-user GPU server, use conda only:
-   - Team-shared stack → `$SHARED_ENVS_DIR/<purpose>/` (e.g. `vllm-0.21-gemma4`)
+   - Team-shared stack → `$ENVS_DIR/<purpose>/` (e.g. `vllm-0.21-gemma4`)
    - Personal experimental → `~/miniforge3/envs/<paper>-<purpose>/`
 
 This avoids: redundant downloads, version conflicts from creating new venvs that duplicate existing ones, and the "Claude forgot the venv exists" failure mode.
@@ -50,7 +50,7 @@ This avoids: redundant downloads, version conflicts from creating new venvs that
   "metrics_output": "metrics.json",
   "expected_runtime_minutes": 120,
   "gpu_memory_gb": 40,
-  "python_env": "$SHARED_ENVS_DIR/vllm-0.21-gemma4",
+  "python_env": "$ENVS_DIR/vllm-0.21-gemma4",
   "python_env_rationale": "matched vllm==0.21 + transformers==5.8 needs (from inventory)"
 }
 ```

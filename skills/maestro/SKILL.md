@@ -24,7 +24,7 @@ Path conventions (override via environment variables; see also `config.yaml`):
 - `$PROJECT_ROOT` — local research root holding one sub-directory per paper (default: your papers directory)
 - `$REMOTE_ROOT` — workspace root on the GPU host (default: `~/work`)
 - `gpu-host` — SSH alias for your GPU machine (configure in `~/.ssh/config`)
-- `$SHARED_MODELS_DIR`, `$SHARED_DATA_DIR`, `$SHARED_ENVS_DIR` — your shared model/data/env directories on the GPU host (configure in `config.yaml`; defaults: `$REMOTE_ROOT/shared_models`, `$REMOTE_ROOT/shared_data`, `$REMOTE_ROOT/shared_envs`)
+- `$MODELS_DIR`, `$DATA_DIR`, `$ENVS_DIR` — your shared model/data/env directories on the GPU host (configure in `config.yaml`; defaults: `$REMOTE_ROOT/shared_models`, `$REMOTE_ROOT/shared_data`, `$REMOTE_ROOT/shared_envs`)
 
 ## HARD RULES
 
@@ -52,19 +52,19 @@ Path conventions (override via environment variables; see also `config.yaml`):
     - Read `$PROJECT_ROOT/.shared_inventory.md` (refresh manually: `bash ~/.claude/skills/maestro/scripts/refresh_inventory.sh`; hourly auto-refresh is optional heartbeat automation, not included in v1)
     - If keyword matches an existing model/dataset/env → use that, do NOT re-download or re-create.
     - **Env policy on a multi-user GPU server: use conda, not venv.**
-      - Team-shared envs: `$SHARED_ENVS_DIR/<purpose>/` (anyone activates, no install needed)
+      - Team-shared envs: `$ENVS_DIR/<purpose>/` (anyone activates, no install needed)
       - Per-user envs: `~/miniforge3/envs/<name>/`
       - `python -m venv` is forbidden here — venv shares system Python and breaks cross-user CUDA isolation.
     - Bypass acquisition only after confirmed miss; refresh inventory immediately after the new env/model lands.
     - **Incident (internal project, 2026):** a 64GB model download was initiated without checking inventory — an equivalent 49GB model had been cached in the shared model directory for weeks. Wasted disk + a permissions lock requiring admin cleanup.
     - **Correct activation pattern (mamba -p envs do NOT ship `bin/activate`):**
       ```
-      ssh gpu-host "source ~/miniforge3/etc/profile.d/conda.sh && conda activate $SHARED_ENVS_DIR/<env> && python -m ..."
+      ssh gpu-host "source ~/miniforge3/etc/profile.d/conda.sh && conda activate $ENVS_DIR/<env> && python -m ..."
       ```
       For tmux launches, wrap in `bash -lc "..."` so the env survives the child shell.
     - **Inventory staleness:** if `$PROJECT_ROOT/.shared_inventory.md` mtime > 1h old, agent MUST force-refresh first: `bash ~/.claude/skills/maestro/scripts/refresh_inventory.sh`
     - **Bootstrap:** if inventory file doesn't exist yet, run the refresh script before any acquisition check.
-    - **HF cache path:** real layout is `$SHARED_MODELS_DIR/huggingface/hub/models--<org>--<name>/snapshots/<SHA>/<files>`. Resolve `<SHA>` via `ls -d <hub>/models--<org>--<name>/snapshots/*/ | tail -1`.
+    - **HF cache path:** real layout is `$MODELS_DIR/huggingface/hub/models--<org>--<name>/snapshots/<SHA>/<files>`. Resolve `<SHA>` via `ls -d <hub>/models--<org>--<name>/snapshots/*/ | tail -1`.
 
 ## Dispatch Protocol
 
@@ -269,7 +269,7 @@ Claude runs on the **control host** (where this skill stack lives). GPU + heavy 
 rsync -az --delete $PROJECT_ROOT/<paper>/code/ gpu-host:$REMOTE_ROOT/Paper/<paper>/code/
 
 # Launch in tmux on gpu-host (non-blocking):
-ssh gpu-host "mkdir -p $REMOTE_ROOT/Paper/<paper>/data/runs/formal-NNN && cd $REMOTE_ROOT/Paper/<paper> && tmux new -d -s <paper>-formal-NNN 'bash -lc \"source ~/miniforge3/etc/profile.d/conda.sh && conda activate $SHARED_ENVS_DIR/<env> && python code/train.py 2>&1 | tee data/runs/formal-NNN/log.txt\"'"
+ssh gpu-host "mkdir -p $REMOTE_ROOT/Paper/<paper>/data/runs/formal-NNN && cd $REMOTE_ROOT/Paper/<paper> && tmux new -d -s <paper>-formal-NNN 'bash -lc \"source ~/miniforge3/etc/profile.d/conda.sh && conda activate $ENVS_DIR/<env> && python code/train.py 2>&1 | tee data/runs/formal-NNN/log.txt\"'"
 
 # Monitor:
 ssh gpu-host 'nvidia-smi'

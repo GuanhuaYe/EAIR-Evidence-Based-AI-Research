@@ -129,6 +129,6 @@ Before finalizing the review, check:
 ## Env Policy (Multi-User GPU Server)
 
 - **NEVER** suggest `python -m venv` -- this is a shared GPU server, use conda only.
-- Team-shared envs at `$SHARED_ENVS_DIR/<purpose>/`. Activate via `source ~/miniforge3/etc/profile.d/conda.sh && conda activate $SHARED_ENVS_DIR/<env>`.
+- Team-shared envs at `$ENVS_DIR/<purpose>/`. Activate via `source ~/miniforge3/etc/profile.d/conda.sh && conda activate $ENVS_DIR/<env>`.
 - See `$PROJECT_ROOT/.shared_inventory.md` for what's available.
 

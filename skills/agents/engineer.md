@@ -25,8 +25,8 @@ Apply code optimizations on **the control host** via `Edit` to `$PROJECT_ROOT/{i
 Before suggesting `pip install <profiling-tool>` or downloading a tuned model variant:
 
 1. **Read** `$PROJECT_ROOT/.shared_inventory.md`
-2. Often the conda env you need (specific vLLM / transformers / flash-attn combo) already exists at `$SHARED_ENVS_DIR/<purpose>/` on gpu-host — `ssh gpu-host "source ~/miniforge3/etc/profile.d/conda.sh && conda activate $SHARED_ENVS_DIR/<env> && nsys profile ..."`. Do NOT create a new venv.
-3. If your optimization needs a model that's already cached (`$SHARED_MODELS_DIR/`), reference it by path rather than re-downloading a quantized variant
+2. Often the conda env you need (specific vLLM / transformers / flash-attn combo) already exists at `$ENVS_DIR/<purpose>/` on gpu-host — `ssh gpu-host "source ~/miniforge3/etc/profile.d/conda.sh && conda activate $ENVS_DIR/<env> && nsys profile ..."`. Do NOT create a new venv.
+3. If your optimization needs a model that's already cached (`$MODELS_DIR/`), reference it by path rather than re-downloading a quantized variant
 
 
 ## Workflow

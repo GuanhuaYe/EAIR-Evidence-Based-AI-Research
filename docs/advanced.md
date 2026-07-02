@@ -37,8 +37,8 @@ control host, so the GPU side needs no external connectivity.
    Passwordless key auth is required (agents run non-interactively).
 
 2. Set the path variables in `.env` (see `.env.example`):
-   `REMOTE_ROOT` (workspace on the GPU host), `SHARED_MODELS_DIR`,
-   `SHARED_DATA_DIR`, `SHARED_ENVS_DIR` (shared resource mounts, if your
+   `REMOTE_ROOT` (workspace on the GPU host), `MODELS_DIR`,
+   `DATA_DIR`, `ENVS_DIR` (shared resource mounts, if your
    cluster has them).
 
 3. Shared-resource discipline (multi-user clusters): before any model or

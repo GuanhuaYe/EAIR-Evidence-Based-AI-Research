@@ -32,10 +32,11 @@ doesn't match a subcommand, ask which one they meant and show the table:
    `~/.eair/config`; batch the rest into ONE round, don't drip-feed):
    - **Language — always the first question**: which language should
      user-facing reporting use? Ask it in the language the user is
-     already typing, then conduct the rest of the interview in their
-     choice. The observer speaks the user's language; the conductor,
-     workers, and all on-disk protocol artifacts stay in English, where
-     models perform best.
+     already typing, and say explicitly that this choice affects ONLY
+     how the system talks to them (the observer) — the research pipeline
+     itself (conductor, workers, all on-disk protocol artifacts) runs in
+     English regardless, where models perform best. Then conduct the
+     rest of the interview in their choice.
    - **Compute**: probe local GPUs first (`nvidia-smi`), report what you
      found, then ask about a remote GPU cluster (ssh alias, test it with
      `ssh <alias> nvidia-smi`). No GPU at all is fine — offer API-only
@@ -55,7 +56,7 @@ doesn't match a subcommand, ask which one they meant and show the table:
      decision points so any experiment state can be recovered.
    - **Paths**: dedicated directories for datasets and model weights
      (shared mounts, scratch disks) instead of the home directory —
-     record as `SHARED_MODELS_DIR` / `SHARED_DATA_DIR`.
+     record as `MODELS_DIR` / `DATA_DIR`.
    - **Intent grilling mode**: before the pipeline starts, the project
      intent gets grilled. Default: the agent answers the interrogation
      from the user's inputs (fast). Option: the questions go to the USER

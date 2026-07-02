@@ -5,9 +5,9 @@
 # Configuration (env vars, all optional):
 #   MAESTRO_GPU_HOST    SSH alias of the GPU host (default: gpu-host; configure in ~/.ssh/config)
 #   PROJECT_ROOT        Local research root (default: ~/Paper); inventory written to $PROJECT_ROOT/.shared_inventory.md
-#   SHARED_MODELS_DIR   Shared model dir on the GPU host (default: ~/work/shared_models)
-#   SHARED_DATA_DIR     Shared dataset dir on the GPU host (default: ~/work/shared_data)
-#   SHARED_ENVS_DIR     Shared conda-env dir on the GPU host (default: ~/work/shared_envs)
+#   MODELS_DIR   Shared model dir on the GPU host (default: ~/work/shared_models)
+#   DATA_DIR     Shared dataset dir on the GPU host (default: ~/work/shared_data)
+#   ENVS_DIR     Shared conda-env dir on the GPU host (default: ~/work/shared_envs)
 #   REMOTE_ROOT         Workspace root on the GPU host (default: ~/work)
 #
 # Called on-demand before any acquisition action (hourly auto-refresh is
@@ -18,24 +18,24 @@
 GPU_HOST="${MAESTRO_GPU_HOST:-gpu-host}"
 PROJECT_ROOT="${PROJECT_ROOT:-$HOME/Paper}"
 INVENTORY="$PROJECT_ROOT/.shared_inventory.md"
-R_MODELS="${SHARED_MODELS_DIR:-~/work/shared_models}"
-R_DATA="${SHARED_DATA_DIR:-~/work/shared_data}"
-R_ENVS="${SHARED_ENVS_DIR:-~/work/shared_envs}"
+R_MODELS="${MODELS_DIR:-~/work/shared_models}"
+R_DATA="${DATA_DIR:-~/work/shared_data}"
+R_ENVS="${ENVS_DIR:-~/work/shared_envs}"
 R_ROOT="${REMOTE_ROOT:-~/work}"
 TMP="$(mktemp)"
 TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S')"
 
-RAW="$(ssh "$GPU_HOST" "SHARED_MODELS_DIR=\"$R_MODELS\" SHARED_DATA_DIR=\"$R_DATA\" SHARED_ENVS_DIR=\"$R_ENVS\" REMOTE_ROOT=\"$R_ROOT\" bash -s" <<'REMOTE'
+RAW="$(ssh "$GPU_HOST" "MODELS_DIR=\"$R_MODELS\" DATA_DIR=\"$R_DATA\" ENVS_DIR=\"$R_ENVS\" REMOTE_ROOT=\"$R_ROOT\" bash -s" <<'REMOTE'
 # Expand possible leading ~ in the passed paths
 expand() { case "$1" in "~"*) echo "$HOME${1#\~}" ;; *) echo "$1" ;; esac; }
-SHARED_MODELS_DIR=$(expand "$SHARED_MODELS_DIR")
-SHARED_DATA_DIR=$(expand "$SHARED_DATA_DIR")
-SHARED_ENVS_DIR=$(expand "$SHARED_ENVS_DIR")
+MODELS_DIR=$(expand "$MODELS_DIR")
+DATA_DIR=$(expand "$DATA_DIR")
+ENVS_DIR=$(expand "$ENVS_DIR")
 REMOTE_ROOT=$(expand "$REMOTE_ROOT")
 
 echo "===HF_MODELS==="
-if [ -d "$SHARED_MODELS_DIR/huggingface/hub" ]; then
-    cd "$SHARED_MODELS_DIR/huggingface/hub"
+if [ -d "$MODELS_DIR/huggingface/hub" ]; then
+    cd "$MODELS_DIR/huggingface/hub"
     for d in models--*; do
         [ -d "$d" ] || continue
         name=$(echo "$d" | sed "s|^models--||" | sed "s|--|/|")
@@ -46,8 +46,8 @@ if [ -d "$SHARED_MODELS_DIR/huggingface/hub" ]; then
 fi
 
 echo "===DATASETS==="
-if [ -d "$SHARED_DATA_DIR" ]; then
-    cd "$SHARED_DATA_DIR"
+if [ -d "$DATA_DIR" ]; then
+    cd "$DATA_DIR"
     for d in */; do
         [ "$d" = "lost+found/" ] && continue
         name="${d%/}"
@@ -58,8 +58,8 @@ if [ -d "$SHARED_DATA_DIR" ]; then
 fi
 
 echo "===NON_HF_MODELS==="
-if [ -d "$SHARED_MODELS_DIR" ]; then
-    cd "$SHARED_MODELS_DIR"
+if [ -d "$MODELS_DIR" ]; then
+    cd "$MODELS_DIR"
     for d in */; do
         name="${d%/}"
         [ "$name" = "huggingface" ] && continue
@@ -70,7 +70,7 @@ fi
 
 echo "===VENVS==="
 # Capture any python env: conda envs (preferred), venv, virtualenv, custom dirs.
-# Sources: conda env list (if installed), $SHARED_ENVS_DIR, conda base, env roots, generic */bin/python.
+# Sources: conda env list (if installed), $ENVS_DIR, conda base, env roots, generic */bin/python.
 # Note: non-interactive ssh shell doesn't load .bashrc, so we explicitly source conda.sh.
 for sh in ~/miniforge3/etc/profile.d/conda.sh ~/miniconda3/etc/profile.d/conda.sh ~/anaconda3/etc/profile.d/conda.sh /opt/conda/etc/profile.d/conda.sh; do
     [ -f "$sh" ] && . "$sh" && break
@@ -84,7 +84,7 @@ done
         done
     fi
     # Conda base + env roots (covers cases where conda.sh sourcing fails)
-    for envroot in "$SHARED_ENVS_DIR" ~/.conda/envs ~/miniforge3/envs ~/miniconda3/envs ~/anaconda3/envs /opt/conda/envs; do
+    for envroot in "$ENVS_DIR" ~/.conda/envs ~/miniforge3/envs ~/miniconda3/envs ~/anaconda3/envs /opt/conda/envs; do
         [ -d "$envroot" ] || continue
         for e in "$envroot"/*; do
             [ -x "$e/bin/python" ] && echo "$e/bin/python"
@@ -105,7 +105,7 @@ done
     pyver=$("$pybin" --version 2>&1 | tr -d "\n")
     # Tag env type
     case "$venv" in
-        "$SHARED_ENVS_DIR"/*) tag="[conda-shared]" ;;
+        "$ENVS_DIR"/*) tag="[conda-shared]" ;;
         */miniforge3|*/miniconda3|*/anaconda3|/opt/conda) tag="[conda-base]" ;;
         */miniforge3/envs/*|*/miniconda3/envs/*|*/anaconda3/envs/*|*/.conda/envs/*|/opt/conda/envs/*) tag="[conda]" ;;
         *) tag="[venv]" ;;
@@ -168,7 +168,7 @@ c_syspy=$(count "$syspy")
   echo "2. Miss? \`ssh $GPU_HOST 'ls $R_MODELS/huggingface/hub | grep -i <name>'\` (fuzzy)."
   echo "3. Still miss? OK to acquire — then refresh: \`bash ~/.claude/skills/maestro/scripts/refresh_inventory.sh\`."
   echo ""
-  echo "Paths on $GPU_HOST (configure via SHARED_MODELS_DIR / SHARED_DATA_DIR / SHARED_ENVS_DIR / REMOTE_ROOT):"
+  echo "Paths on $GPU_HOST (configure via MODELS_DIR / DATA_DIR / ENVS_DIR / REMOTE_ROOT):"
   echo "- Models (HF cache): \`$R_MODELS/huggingface/hub/\`"
   echo "- Datasets:          \`$R_DATA/\`"
   echo "- Paper workspace:   \`$R_ROOT/Paper/\`"

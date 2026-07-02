@@ -15,7 +15,7 @@ datasets to use — you PROPOSE candidates. Supervisor approves or rejects.
 
 Datasets are LARGE — download directly to **gpu-host**, never to the control host. Standard idiom:
 - After Supervisor approves a candidate: `ssh gpu-host "mkdir -p $REMOTE_ROOT/Paper/{idea_id}/data/datasets/{ds_name} && cd $_ && huggingface-cli download {hf_repo} --local-dir ."`
-- Or for shared team datasets: check `$SHARED_DATA_DIR/<name>/` on gpu-host first; reuse instead of re-downloading.
+- Or for shared team datasets: check `$DATA_DIR/<name>/` on gpu-host first; reuse instead of re-downloading.
 - Update output.json with the gpu-host paths (e.g. `$REMOTE_ROOT/Paper/{idea_id}/data/datasets/<name>/`) so downstream Coder/Runner know where to find them.
 
 Probing size/format BEFORE download (saves disk): `ssh gpu-host "huggingface-cli download {hf_repo} --dry-run"` or HF API metadata.
@@ -29,28 +29,28 @@ Before ANY `huggingface-cli download`, `wget`, or dataset acquisition:
    - If `$PROJECT_ROOT/.shared_inventory.md` does not exist -> run `bash ~/.claude/skills/maestro/scripts/refresh_inventory.sh` first
    - If file mtime > 3600s old (check with `stat -c %Y`) -> force-refresh before grep
 
-1. **Read** `$PROJECT_ROOT/.shared_inventory.md` -- it lists every model + dataset currently in the shared model/data directories on gpu-host (`$SHARED_MODELS_DIR`, `$SHARED_DATA_DIR`). Grep candidate keyword.
+1. **Read** `$PROJECT_ROOT/.shared_inventory.md` -- it lists every model + dataset currently in the shared model/data directories on gpu-host (`$MODELS_DIR`, `$DATA_DIR`). Grep candidate keyword.
 
 2. **If matched, resolve the REAL path** -- the HF hub directory uses `models--<org>--<name>` (double-dash separator), and weights live inside `snapshots/<SHA>/`. From inventory entry `google/gemma-4-26B-A4B-it`:
    ```
-   PARENT=$SHARED_MODELS_DIR/huggingface/hub/models--google--gemma-4-26B-A4B-it
+   PARENT=$MODELS_DIR/huggingface/hub/models--google--gemma-4-26B-A4B-it
    SNAPSHOT=$(ssh gpu-host "ls -d $PARENT/snapshots/*/ | tail -1")
    # use $SNAPSHOT as the model path
    ```
-   Datasets are simpler: `$SHARED_DATA_DIR/<name>/`.
+   Datasets are simpler: `$DATA_DIR/<name>/`.
 
 3. **If miss**, two-pass fuzzy:
-   - First: `ssh gpu-host "ls $SHARED_MODELS_DIR/huggingface/hub | grep -i <part-of-org-or-name>"`
+   - First: `ssh gpu-host "ls $MODELS_DIR/huggingface/hub | grep -i <part-of-org-or-name>"`
    - Names with hyphens are tricky: `google/gemma-4-26B` -> `models--google--gemma-4-26B...` (only ORG/NAME boundary uses double-dash; hyphens within name stay)
 
 4. **If still miss**, OK to download. Use the right conda env -- `huggingface-cli` is NOT in system Python; it's in `vllm-0.21-gemma4` (and any future env that installed `huggingface-hub`). Standard cmd:
    ```
-   ssh gpu-host "source ~/miniforge3/etc/profile.d/conda.sh && conda activate $SHARED_ENVS_DIR/vllm-0.21-gemma4 && huggingface-cli download <repo> --local-dir $SHARED_MODELS_DIR/huggingface/hub/models--<org>--<name>/"
+   ssh gpu-host "source ~/miniforge3/etc/profile.d/conda.sh && conda activate $ENVS_DIR/vllm-0.21-gemma4 && huggingface-cli download <repo> --local-dir $MODELS_DIR/huggingface/hub/models--<org>--<name>/"
    ```
 
 5. **Immediately after** any download/create, refresh: `bash ~/.claude/skills/maestro/scripts/refresh_inventory.sh`
 
-**Incident (internal project, 2026):** during a rebuttal experiment, a 64GB model was downloaded without checking inventory; an equivalent model was already present under `$SHARED_MODELS_DIR/huggingface/hub/`. Wasted bandwidth + a setgid lock requiring admin chmod. Rule: ALWAYS grep the inventory before any download.
+**Incident (internal project, 2026):** during a rebuttal experiment, a 64GB model was downloaded without checking inventory; an equivalent model was already present under `$MODELS_DIR/huggingface/hub/`. Wasted bandwidth + a setgid lock requiring admin chmod. Rule: ALWAYS grep the inventory before any download.
 
 
 ## Core Loop
