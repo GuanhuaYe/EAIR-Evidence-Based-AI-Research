@@ -118,8 +118,19 @@ cd EAIR && ./install.sh
 ./install.sh --check
 ```
 
-Then, in Claude Code: "grill this experiment design", "evaluate this idea",
-or "I want a real finding, not a paper" (starts big-finding).
+Then, in Claude Code:
+
+```
+/eair start a multilingual reasoning research project
+/eair find  does X actually cause Y in my results?
+/eair grill experiments/E01/design.md
+/eair status
+/eair paper
+```
+
+`/eair` is the front door; every skill is also directly invocable by name
+(`/big-finding`, `/grill-doc`, `/idea-evaluator`, ...), and plain phrases
+like "grill this experiment design" work too.
 
 Tier 2 — full pipeline on one machine. Copy `.env.example` to `.env` if you
 want literature-search APIs and email notification; none of it is required.
@@ -137,6 +148,12 @@ Science layer:
 | `big-finding` | hypothesis-driven discovery loop: bundles, preregistered verdicts, append-only knowledge tree | Stable |
 | `grill-doc` | evidence-gated design interrogation; quotes machine-checked; the GPU ignition gate | Stable |
 | `idea-evaluator` | triage ideas by how cheaply they can be killed; novelty as attackable search queries | Stable |
+
+Entry point:
+
+| Skill | What it does | Status |
+|---|---|---|
+| `eair` | the front door: `/eair start|find|grill|status|paper` routes to the right layer | Stable |
 
 Execution layer:
 
