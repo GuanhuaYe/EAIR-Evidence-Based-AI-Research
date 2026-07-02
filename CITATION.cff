@@ -5,6 +5,8 @@ type: software
 authors:
   - family-names: "Ye"
     given-names: "Guanhua"
+    affiliation: "Beijing University of Posts and Telecommunications"
+    email: "g.ye@bupt.edu.cn"
 repository-code: "https://github.com/GuanhuaYe/EAIR"
 license: Apache-2.0
 keywords:
