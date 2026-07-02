@@ -47,6 +47,26 @@ verdict.
   experimenter demand effects. See
   [docs/supervision-topology.md](docs/supervision-topology.md).
 
+## How it's organized
+
+```
+user ── observer     talks to the user; reads ledgers and briefs,
+          │          never disturbs a running experiment
+          ▼
+      conductor      unattended; its context holds protocol + disk
+          │          state and nothing else; never writes code,
+          │          never runs experiments, never self-reviews
+          ▼
+      workers        Coder → Auditor (different model family) →
+                     Engineer → [design gate] → Runner → Writer ...
+                     one experiment = one fresh agent
+```
+
+Layers talk through files with schemas (task specs, structured outputs,
+ledgers), not conversation. User influence enters as protocol files at
+experiment boundaries. Why it's built this way:
+[docs/supervision-topology.md](docs/supervision-topology.md).
+
 ## See the loop run
 
 `examples/one-loop` walks the whole loop on a toy task in about five
