@@ -17,6 +17,28 @@ The design rule behind everything here: when a decision matters, don't let a
 language model make it by feel. Write the rule down first, then compute the
 verdict.
 
+## What counts as evidence
+
+Evidence-based medicine's central instrument is the hierarchy of evidence:
+a claim is only as strong as the study design behind it, and anecdotes
+don't outrank trials no matter how confident the storyteller. EAIR runs
+research on the same instrument. Every number in the system sits at a
+level, and every mechanism in this repo exists to move claims up the
+ladder — or kill them on the way:
+
+| Level | In medicine | In EAIR | May enter |
+|---|---|---|---|
+| 0 | anecdote | a model's claim in chat; a heartbeat line; any unaudited number | nowhere — observability only |
+| 1 | case report | a worker's structured output (self-tested, not yet audited) | the conductor's decisions |
+| 2 | controlled study | a result that survived cross-model adversarial audit | discussion, flagged exploratory |
+| 3 | preregistered trial | an audited **bundle** (treatment + baseline + ablation + controls) judged by a rule frozen before the code existed | the ledger (`EVOLUTION.md`, `tree.json`) |
+| 4 | systematic review | a level-3 finding reproduced across models / domains / seeds | the findings catalogue — what a paper may claim |
+
+Two consequences run through everything below: numbers cannot skip levels
+(an unaudited result never reaches the ledger, however good it looks), and
+a claim's wording is capped by its level — "we find evidence of" at level
+2 is not "we show" at level 3.
+
 ## What that means concretely
 
 - Decision rules are preregistered. Before experiment code exists, the
@@ -100,7 +122,9 @@ observer nobody knows about can never contaminate anything). Files carry
 trust levels: workers write heartbeats and structured outputs; the
 conductor writes dispatch logs and briefs; the scientific ledger
 (`EVOLUTION.md`, `tree.json`) is written by the conductor alone, and only
-after the audit passes. Unaudited numbers never enter the ledger.
+after the audit passes. These are the evidence levels from the table
+above, enforced as file permissions: unaudited numbers never enter the
+ledger.
 
 Depth scales with risk: a typo fix needs one agent. Add a conductor when
 one context can't hold a pipeline; add the observer when the pipeline runs
