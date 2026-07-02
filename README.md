@@ -143,6 +143,22 @@ original mail does not authenticate — and lands your reply as a file the
 conductor reads at the next experiment boundary. Your words never touch a
 running context, even by email.
 
+### The clock never hallucinates
+
+LLMs have no internal clock. Left to themselves they estimate timestamps,
+invent ETAs, and forget promises to "check back in ten minutes" — we
+watched a conductor write `03:25` in its log at `01:42` wall time. So time
+is not an LLM job here. `conductor/scripts/pulse.py` is a plain cron
+process that ticks every two minutes: it records observed liveness to
+`PULSE.jsonl` (newest file mtimes per experiment, GPU utilization, tmux
+sessions — measured, not self-reported) and checks a ledger of deadlines
+in `alarms/pending/` that any agent registers when it dispatches long
+work. Overdue or gone-stale expectations get a line in `ALARMS.jsonl`,
+which wakes whoever is watching. The split is strict: the clock records
+and fires but never decides; the agents decide but never estimate time.
+It also saves tokens — a cron tick is free, so no LLM ever burns a
+context re-read just to poll.
+
 ### Language
 
 The observer speaks your language (it's the first setup question, and it

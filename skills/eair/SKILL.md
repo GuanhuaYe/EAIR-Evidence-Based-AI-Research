@@ -53,6 +53,13 @@ doesn't match a subcommand, ask which one they meant and show the table:
      `<project>/escalations/<token>-reply.md`, where the conductor
      reads it at the next experiment boundary. Human decisions arrive
      as files, never as chat.
+   - **Clock**: offer to install the pulse tick —
+     `*/2 * * * * python3 <skills>/conductor/scripts/pulse.py
+     --project-dir <project> [--gpu-host <alias>]` in the user's crontab.
+     This is the system's only time authority: it records observed
+     liveness to `PULSE.jsonl` and fires registered deadline alarms to
+     `ALARMS.jsonl`. Without it, stall detection falls back to
+     session-bound watchers that die with the session.
    - **Git**: use git for backup and rollback? If yes: init the project
      repo, commit at every experiment boundary (post-verdict), tag
      decision points so any experiment state can be recovered.
