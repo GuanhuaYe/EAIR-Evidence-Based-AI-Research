@@ -187,7 +187,7 @@ that require seeing pixels are marked *(image)* and reported as
 | ID  | Rule                                                             | Severity |
 |-----|------------------------------------------------------------------|----------|
 | Q1  | Every axis has a label **and units** (or is explicitly unitless) | CRITICAL |
-| Q2  | Colorbar/legend sanity: every encoded channel is decodable; no legend entry without a mark; no color-only distinction between series | CRITICAL |
+| Q2  | Colorbar/legend integrity: every encoded channel is decodable; no legend entry without a mark; no color-only distinction between series | CRITICAL |
 | Q3  | Legible at final column width *(image)*: minimum text ~8pt after scaling; test by viewing at 100% of final size | CRITICAL |
 | Q4  | Survives grayscale *(image)*: takeaway still readable when colors are removed | MAJOR |
 | Q5  | Caption is self-contained: first sentence states the takeaway; a reader with no body text can decode the figure | MAJOR |

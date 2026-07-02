@@ -21,7 +21,7 @@ Fabricated and misattributed citations are a known reviewer kill at
 top venues. LLM-assisted writing has made this risk worse — a
 plausible-sounding "Smith et al. 2023 showed that ..." can be entirely
 hallucinated, or attached to a real paper that does not actually make
-the claim. This skill runs two independent passes: a bibtex sanity
+the claim. This skill runs two independent passes: a bibtex verification
 pass and a claim-support pass.
 
 ## When to invoke
@@ -50,7 +50,7 @@ Detect via:
 grep -rho '\\cite[ptn]\?{[^}]*}' <paper>/latex/ | sort -u
 ```
 
-### Stage 1 — Bibtex sanity pass (control host, no GPU)
+### Stage 1 — Bibtex verification pass (control host, no GPU)
 
 For every `@inproceedings` / `@article` / `@misc` entry, verify:
 

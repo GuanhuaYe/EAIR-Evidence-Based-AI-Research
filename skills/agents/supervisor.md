@@ -100,7 +100,7 @@ On resume, read `sub_stage` and continue from that exact point. Never redo compl
 
 **When:** Code has passed Auditor + Engineer review. Before Runner executes.
 
-**Purpose:** Sanity check that what's about to run matches the research plan.
+**Purpose:** Validity check that what's about to run matches the research plan.
 Running is the most expensive operation (GPU hours). Catch scope drift early.
 
 **Read:**

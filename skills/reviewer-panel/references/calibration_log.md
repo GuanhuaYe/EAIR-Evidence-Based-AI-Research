@@ -1,6 +1,6 @@
 # Panel calibration log
 
-Append-only log of past panels. Use to sanity-check current panel
+Append-only log of past panels. Use to validity-check current panel
 score distributions before committing the verdict.
 
 Format per row:
