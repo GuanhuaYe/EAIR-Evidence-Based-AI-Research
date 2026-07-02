@@ -13,10 +13,12 @@ Projects and ideas that influenced EAIR:
 - **[nature-skills](https://github.com/Yuan1z0825/nature-skills)** by
   Yuan Yizhe — inspiration for the skill-collection repo format, the
   skill index table with maturity labels, and the tiered installation UX.
-- **The "grill me" review pattern** from the Claude skills community —
-  the spirit of interrogation-style review informed our `grill-doc` gate,
-  which hardens it into an evidence-gated protocol where quotes are
-  machine-verified and verdicts are computed by code, not judged by an LLM.
+- **[`/grill-me` and `/grill-with-docs`](https://github.com/mattpocock/skills)**
+  by Matt Pocock — the grilling-session pattern (make the agent interrogate
+  instead of assume) informed our `grill-doc` gate, which points it the other
+  way (the document gets grilled, not the user) and hardens it into an
+  evidence-gated protocol: quotes machine-verified against source files,
+  verdict computed by code.
 - **Self-Consistency (Wang et al., 2022)** and the preregistration /
   registered-report tradition in the natural sciences — the methodological
   backbone of the `big-finding` protocol.
