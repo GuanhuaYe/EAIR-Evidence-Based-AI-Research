@@ -187,8 +187,12 @@ grill-doc's gate is a script that substring-checks every quote against the
 source file, and PASS/BLOCK is computed from the tag table. Same for the
 file registry and the demo's verdict step.
 
-**Do I need a GPU cluster?** No. Tier 1 is markdown only, and the science
-layer works on purely offline analyses.
+**Do I need a GPU cluster?** The system is designed for AI research labs
+with GPU clusters — that's where the full pipeline (training runs, the GPU
+ignition gate, remote runners) earns its keep. Without one you can still do
+real work: inference-only experiments through LLM APIs, offline analyses of
+existing outputs, and the whole science layer (preregistration, bundles,
+audits) applies unchanged.
 
 **Why cross-model review?** Because same-model self-review rubber-stamps.
 We tried it. The planted bug in the demo is the kind of thing a hostile
