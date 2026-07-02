@@ -36,6 +36,11 @@ verdict.
   (`EVOLUTION.md`) with exact conditions and metrics, plus a veto list of
   directions that were killed and the evidence that killed them. Gates read
   the veto list before approving anything.
+- One experiment, one agent. Each bundle runs in a freshly spawned agent;
+  results, decision and tree update are written to disk, then the agent is
+  closed. The next experiment starts clean, rebuilt from the tree and
+  ledger. A small fresh context keeps the model sharp, and an agent that
+  never saw experiment N-1 can't steer experiment N toward consistency.
 
 ## See the loop run
 

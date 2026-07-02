@@ -33,7 +33,7 @@ mechanism, and falsifiability. This skill is a branching-tree
 explorer of hypothesis space, designed to converge on the smallest
 number of claims that survive rigorous controlled testing.
 
-Three principles:
+Four principles:
 
 1. **Every experiment is a BUNDLE, never a single arm.** A bundle
    contains the treatment, the baseline, at least one ablation, and
@@ -51,6 +51,26 @@ Three principles:
    "X mechanism beats Y mechanism across N distinct domains with
    stat-sig effect" is a finding. Anything less is a step on the
    path.
+
+4. **One experiment, one agent.** LLM quality degrades as context
+   grows: a fresh, focused context is the model's smart zone; a long
+   transcript dragging every previous experiment is its dumb zone.
+   So agents are never reused across experiments. Each bundle is
+   executed by a freshly spawned agent whose context holds only the
+   hypothesis node, the preregistered task.json, pointers to input
+   data, and the relevant veto-list entries — never the raw history
+   of earlier experiments. Before the agent is closed, everything
+   worth keeping is written to disk: results, audit outputs,
+   decision.md, the tree.json update, the ledger entry. If it is not
+   on disk, it did not happen. The next experiment gets a new agent
+   whose context is rebuilt from the tree and ledger, not inherited.
+   Resuming an agent is allowed only WITHIN one experiment (e.g. a
+   Coder fixing its own audited bundle), never across experiments.
+   This buys two things at once: capability (a small fresh context
+   outperforms the same model at 100k+ tokens on exacting analysis)
+   and independence (an agent that watched experiment N-1 succeed
+   will steer experiment N toward consistency — fresh agents are the
+   closest thing to analyst blinding a pipeline can get).
 
 ## When to invoke
 
