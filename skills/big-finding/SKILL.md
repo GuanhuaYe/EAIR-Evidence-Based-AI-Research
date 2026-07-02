@@ -3,7 +3,7 @@ name: big-finding
 description: >-
   Orchestrates hypothesis-driven scientific discovery loops aimed at
   Nature/Science-grade findings, NOT paper-shipping. Replaces the
-  Maestro engineering pipeline when the goal is "what is the
+  conductor engineering pipeline when the goal is "what is the
   underlying scientific truth here" rather than "deliver this
   contribution to the camera-ready". Each loop is: (1) formulate
   falsifiable hypothesis, (2) design complete experiment BUNDLE
@@ -17,8 +17,8 @@ description: >-
   the user wants real discovery, says 'big finding' / 'Nature-grade'
   / 'real science' / 'design experiment to test hypothesis' / 'I
   don't care about the paper, what's actually true', or when
-  experimental results from Maestro reveal an unexplored
-  generalizable pattern. Different from Maestro: Maestro ships;
+  experimental results from the conductor reveal an unexplored
+  generalizable pattern. Different from the conductor: the conductor ships;
   big-finding discovers.
 license: CC-BY-4.0
 ---
@@ -77,16 +77,16 @@ Four principles:
 - User says "big finding", "Nature-grade", "real science", "what is
   actually true", "I don't care about the paper", "design controlled
   experiment", "test this hypothesis rigorously".
-- An anomaly emerges from Maestro-driven experiments (e.g., result
+- An anomaly emerges from conductor-driven experiments (e.g., result
   counter-intuitive, ablation diverges from main effect).
 - 2+ prior experiments produced conflicting signals on the same
   question.
 
 Do NOT invoke for:
-- Paper section drafting (use the Maestro paper layer).
+- Paper section drafting (use the paper layer).
 - Single-arm "is X higher than Y" measurements with no protocol
   control.
-- Rebuttal experiments (use rebuttal-drafter + Maestro chain).
+- Rebuttal experiments (use rebuttal-drafter + the conductor chain).
 
 ## Operating procedure
 
@@ -247,10 +247,10 @@ mutate. Older snapshots stay readable.
 
 ## Cross-skill interactions
 
-- **Maestro**: Big-finding produces hypotheses + experiment bundles.
-  Maestro's agent chain (Coder/Auditor/Engineer/Runner) is the
+- **the conductor**: Big-finding produces hypotheses + experiment bundles.
+  the conductor's agent chain (Coder/Auditor/Engineer/Runner) is the
   underlying execution engine for each arm. Big-finding sits ABOVE
-  Maestro, deciding what to run and why; Maestro decides how to run
+  the conductor, deciding what to run and why; the conductor decides how to run
   it reliably.
 - **idea-evaluator**: Use to score whether a candidate hypothesis is
   worth pursuing before designing a bundle. Don't pursue
@@ -260,7 +260,7 @@ mutate. Older snapshots stay readable.
   questions.
 - **pre-submission-reviewer** / **rebuttal-drafter**: Only after
   big-finding has produced PROVEN findings and the user explicitly
-  wants to write a paper. Use Maestro stage 3+ to ship.
+  wants to write a paper. Use the conductor stage 3+ to ship.
 
 ## Constraints and overrides
 
@@ -274,7 +274,7 @@ mutate. Older snapshots stay readable.
 - **No "we got a positive result, let's stop".** PROVEN status
   requires the bundle's decision rule pre-registered BEFORE the
   experiment runs. (Standard pre-registration practice.)
-- **Track confounds explicitly.** When a previous Maestro experiment
+- **Track confounds explicitly.** When a previous the conductor experiment
   has confounded results (e.g., different code versions), the
   big-finding skill MUST flag that prior comparison as "lineage
   broken — do not cite" in the tree.

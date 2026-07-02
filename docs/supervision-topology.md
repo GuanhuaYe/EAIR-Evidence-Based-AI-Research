@@ -9,7 +9,7 @@ user ── observer (talks to the user, only observes the system)
             │ reads disk artifacts of EVERY layer below (polling);
             │ writes protocol artifacts at boundaries
             ▼
-        conductor (Maestro, unattended; context contains protocol + disk state, nothing else)
+        conductor (the conductor, unattended; context contains protocol + disk state, nothing else)
             │ dispatches, one experiment = one fresh agent;
             │ workers push completion back to it directly
             ▼
@@ -128,7 +128,7 @@ ends its turn. The observer relays the decision brief to the user, gets an
 answer, translates it into a protocol artifact, and the next fresh context
 picks it up from disk. The user's words never touch the conductor.
 
-This works over email too: `maestro/scripts/mail_bridge.py send` mails the
+This works over email too: `conductor/scripts/mail_bridge.py send` mails the
 escalation with a one-time confirmation code (24h lifetime); the user
 replies — from any account — and copies the code into the reply text;
 `mail_bridge.py poll` verifies the code over IMAP (quoted text is stripped,

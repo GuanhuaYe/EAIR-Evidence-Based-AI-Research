@@ -3,7 +3,7 @@
 # Captures: HF models, datasets, non-HF models, Python venvs, system Python ML packages.
 #
 # Configuration (env vars, all optional):
-#   MAESTRO_GPU_HOST    SSH alias of the GPU host (default: gpu-host; configure in ~/.ssh/config)
+#   EAIR_GPU_HOST    SSH alias of the GPU host (default: gpu-host; configure in ~/.ssh/config)
 #   PROJECT_ROOT        Local research root (default: ~/Paper); inventory written to $PROJECT_ROOT/.shared_inventory.md
 #   MODELS_DIR   Shared model dir on the GPU host (default: ~/work/shared_models)
 #   DATA_DIR     Shared dataset dir on the GPU host (default: ~/work/shared_data)
@@ -15,7 +15,7 @@
 #
 # NOT `set -e` — many sub-commands return non-zero naturally (grep -c on empty input).
 
-GPU_HOST="${MAESTRO_GPU_HOST:-gpu-host}"
+GPU_HOST="${EAIR_GPU_HOST:-gpu-host}"
 PROJECT_ROOT="${PROJECT_ROOT:-$HOME/Paper}"
 INVENTORY="$PROJECT_ROOT/.shared_inventory.md"
 R_MODELS="${MODELS_DIR:-~/work/shared_models}"
@@ -158,7 +158,7 @@ c_syspy=$(count "$syspy")
   echo "# Shared Resources Inventory ($GPU_HOST)"
   echo ""
   echo "<!-- Auto-generated $TIMESTAMP by refresh_inventory.sh -->"
-  echo "<!-- Refresh: bash ~/.claude/skills/maestro/scripts/refresh_inventory.sh -->"
+  echo "<!-- Refresh: bash ~/.claude/skills/conductor/scripts/refresh_inventory.sh -->"
   echo ""
   echo "## MANDATORY CHECK BEFORE ANY ACQUISITION"
   echo ""
@@ -166,7 +166,7 @@ c_syspy=$(count "$syspy")
   echo ""
   echo "1. \`grep -i <keyword>\` against this file."
   echo "2. Miss? \`ssh $GPU_HOST 'ls $R_MODELS/huggingface/hub | grep -i <name>'\` (fuzzy)."
-  echo "3. Still miss? OK to acquire — then refresh: \`bash ~/.claude/skills/maestro/scripts/refresh_inventory.sh\`."
+  echo "3. Still miss? OK to acquire — then refresh: \`bash ~/.claude/skills/conductor/scripts/refresh_inventory.sh\`."
   echo ""
   echo "Paths on $GPU_HOST (configure via MODELS_DIR / DATA_DIR / ENVS_DIR / REMOTE_ROOT):"
   echo "- Models (HF cache): \`$R_MODELS/huggingface/hub/\`"

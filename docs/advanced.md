@@ -43,7 +43,7 @@ control host, so the GPU side needs no external connectivity.
 
 3. Shared-resource discipline (multi-user clusters): before any model or
    dataset download, agents check the shared inventory
-   (`skills/maestro/scripts/refresh_inventory.sh`) — re-downloading a 60GB
+   (`skills/conductor/scripts/refresh_inventory.sh`) — re-downloading a 60GB
    model that already sits on a shared mount is exactly the waste this
    prevents. Use conda environments, not venv, on shared machines.
 

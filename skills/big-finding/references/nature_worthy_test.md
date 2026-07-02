@@ -110,7 +110,7 @@ When a node passes all 5:
    - Citation-ready statement (1 sentence, ≤30 words)
    - Open follow-up questions
    - Connection to literature (related prior work)
-3. The finding becomes a building block for papers (via Maestro
+3. The finding becomes a building block for papers (via the conductor
    stage 3+ if user wants to write).
 
 ## Example: A passing finding

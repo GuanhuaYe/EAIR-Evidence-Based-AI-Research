@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://maestro.local/agent-inspector/output",
+  "$id": "https://conductor.local/agent-inspector/output",
   "title": "Agent Output",
   "description": "Universal output schema returned by any agent after task execution.",
   "type": "object",

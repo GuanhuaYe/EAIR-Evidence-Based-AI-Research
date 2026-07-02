@@ -167,7 +167,7 @@ canonical .tex without user confirmation; produce alongside.
 
 - Numbers, equations, citations: never alter content. Only restructure
   surrounding prose.
-- Locked sections (per Maestro's submit-gate locked sections list):
+- Locked sections (per the conductor's submit-gate locked sections list):
   if a section is locked, refuse to polish unless user explicitly
   unlocks.
 - Theorem/lemma/proof environments: do not touch internals. May

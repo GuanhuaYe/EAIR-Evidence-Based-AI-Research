@@ -1,5 +1,5 @@
 #!/bin/bash
-# Maestro Watchdog — displays experiment progress in tmux status bar
+# the conductor Watchdog — displays experiment progress in tmux status bar
 # Usage: bash watchdog.sh <PID> <LOG_FILE> [TIMEOUT_MIN]
 # Runs in background, updates tmux status-right every 1s
 # Sends email on CRASH or TIMEOUT via notify.sh
@@ -75,7 +75,7 @@ Speed: ${SPEED:-unknown}
 
 Last 10 lines of log:
 $(tail -10 "$LOG" 2>/dev/null)"
-        echo "[$(date)] WATCHDOG TIMEOUT: PID $PID exceeded ${TIMEOUT_MIN}min" >> /tmp/maestro_watchdog.log
+        echo "[$(date)] WATCHDOG TIMEOUT: PID $PID exceeded ${TIMEOUT_MIN}min" >> /tmp/conductor_watchdog.log
         sleep 60  # don't spam, check once per minute after timeout
         continue
     fi

@@ -44,7 +44,7 @@ Iron rules inherited from that project (structural, not prompt-level):
    removed, never added; adding one escape route collapsed a score of 81
    to 0).
 5. **Cross-model.** When dispatched as agents, defender model ≠ griller
-   model (Maestro cross-model rule).
+   model (the conductor cross-model rule).
 6. **Watch traces on small batches.** First runs on a new project: read
    the full Q&A transcript, don't trust the summary. Never blind-tune
    on the full set.
@@ -160,6 +160,6 @@ shipped; add your own from your first grilled project.)
 ## Outputs
 
 - `grill_report.md` — tag table + verdict + routing, written to
-  `{exp_dir}/methodology/grill-doc_v{N}.md` when invoked by Maestro.
+  `{exp_dir}/methodology/grill-doc_v{N}.md` when invoked by the conductor.
 - `grill_result.json` — machine-readable, consumed as `methodology_input`
   by the next agent's task.json.

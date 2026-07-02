@@ -34,7 +34,7 @@ order, never fabricate, respect the venue's hard character budget.
   thread, EasyChair export, Microsoft CMT JSON).
 - User mentions "rebuttal phase", "author response", "shepherd letter",
   "discussion period", or a top venue's known rebuttal window.
-- Maestro's pipeline has reached a venue's rebuttal stage and the
+- the conductor's pipeline has reached a venue's rebuttal stage and the
   Reviewer agent has flagged reviewer comments inbound.
 
 Do NOT invoke for general editing or for non-rebuttal review responses
@@ -61,7 +61,7 @@ Classes:
   appendix. 60-120 words.
 - **MAJOR-MISUNDERSTANDING** — reviewer misread. Quote the misread
   passage, clarify, point to the exact section/line. 40-80 words.
-- **NEW-EXPERIMENT** — requires a new run. Flag and surface to Maestro
+- **NEW-EXPERIMENT** — requires a new run. Flag and surface to the conductor
   as a P-task; do NOT draft prose until the run lands.
 - **OUT-OF-SCOPE** — politely decline, redirect to future work. 30-60
   words. Use sparingly (≤1 per reviewer).
@@ -121,7 +121,7 @@ secondary evidence, never trim the lead concession.
 
 ### Stage 5 — New-experiment loop (optional)
 
-If any NEW-EXPERIMENT rows exist, emit a structured handoff to Maestro:
+If any NEW-EXPERIMENT rows exist, emit a structured handoff to the conductor:
 
 ```json
 {
@@ -132,7 +132,7 @@ If any NEW-EXPERIMENT rows exist, emit a structured handoff to Maestro:
 }
 ```
 
-Maestro fans these out to Coder/Engineer/Runner. Drafter waits, then
+The conductor fans these out to Coder/Engineer/Runner. Drafter waits, then
 resumes Stage 3 for those rows once metrics.json lands.
 
 ## Output structure

@@ -1,5 +1,5 @@
 """
-Maestro Artifact Registry — mandatory file creation gateway.
+the conductor Artifact Registry — mandatory file creation gateway.
 
 Usage:
     from registry import Registry

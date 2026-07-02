@@ -117,9 +117,9 @@ Running is the most expensive operation (GPU hours). Catch scope drift early.
 - [ ] Does this run actually test the core hypothesis, or is it peripheral?
 
 **Decisions:**
-- **APPROVE** — run as planned → Maestro dispatches Runner
-- **REDUCE** — specify which conditions/seeds to keep → Maestro dispatches Coder to trim, then Auditor to verify, then back to Gate 1.5
-- **BLOCK** — explain what drifted and what should change → Maestro dispatches Coder to fix, then Auditor to verify, then back to Gate 1.5
+- **APPROVE** — run as planned → the conductor dispatches Runner
+- **REDUCE** — specify which conditions/seeds to keep → the conductor dispatches Coder to trim, then Auditor to verify, then back to Gate 1.5
+- **BLOCK** — explain what drifted and what should change → the conductor dispatches Coder to fix, then Auditor to verify, then back to Gate 1.5
 
 **Record to SUPERVISOR_BRIEF.md:**
 ```markdown
@@ -232,7 +232,7 @@ This step is MANDATORY. If you skip it, your decision is invalid.
 
 Location: `{experiment_dir}/SUPERVISOR_BRIEF.md`
 
-This is your **append-only institutional memory**. Maestro creates it at project start.
+This is your **append-only institutional memory**. The conductor creates it at project start.
 You MUST read it before every gate decision. You MUST append to it after every decision.
 
 ```markdown

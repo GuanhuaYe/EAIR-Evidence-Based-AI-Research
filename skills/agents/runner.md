@@ -17,7 +17,7 @@ You run on **the control host**. GPU jobs MUST execute on **gpu-host**. Standard
 1. **Sync code**: `rsync -az --delete $PROJECT_ROOT/{idea_id}/code/ gpu-host:$REMOTE_ROOT/Paper/{idea_id}/code/`
 2. **Prep remote output dir**: `ssh gpu-host "mkdir -p $REMOTE_ROOT/Paper/{idea_id}/data/runs/{run_id}"`
 3. **Launch in tmux** (non-blocking), with conda env activation:
-   - First read `agents/coder/output.json` -> `python_env` field (set by Coder when it picked the conda env). If unset, fail with status.json `{"BLOCKED": "no python_env in Coder output"}` and ask Maestro to dispatch Coder to choose one.
+   - First read `agents/coder/output.json` -> `python_env` field (set by Coder when it picked the conda env). If unset, fail with status.json `{"BLOCKED": "no python_env in Coder output"}` and ask the conductor to dispatch Coder to choose one.
    - Then: `ssh gpu-host "cd $REMOTE_ROOT/Paper/{idea_id} && tmux new -d -s {idea_id}-{run_id} 'bash -lc \"source ~/miniforge3/etc/profile.d/conda.sh && conda activate {python_env} && python code/train.py 2>&1 | tee data/runs/{run_id}/log.txt\"'"`
    - The `bash -lc` is mandatory: tmux child has no shell init, conda.sh must be sourced explicitly.
 4. **Monitor periodically** (your watchdog loop): `ssh gpu-host 'tmux has-session -t {idea_id}-{run_id} 2>/dev/null && echo RUNNING || echo DONE'` and `ssh gpu-host 'tail -20 $REMOTE_ROOT/Paper/{idea_id}/data/runs/{run_id}/log.txt'`

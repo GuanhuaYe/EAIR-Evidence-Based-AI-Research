@@ -3,13 +3,13 @@
 Pipeline completion notifier — sends email with supervisor log + final PDF.
 
 SMTP config comes from environment variables (set in .env):
-    MAESTRO_SMTP_HOST     SMTP server host
-    MAESTRO_SMTP_PORT     SMTP SSL port (default 465)
-    MAESTRO_SMTP_USER     SMTP account / From address
-    MAESTRO_SMTP_PASS     SMTP password / app token  # set in .env, never commit
-    MAESTRO_NOTIFY_EMAIL  Recipient address(es), comma-separated
+    EAIR_SMTP_HOST     SMTP server host
+    EAIR_SMTP_PORT     SMTP SSL port (default 465)
+    EAIR_SMTP_USER     SMTP account / From address
+    EAIR_SMTP_PASS     SMTP password / app token  # set in .env, never commit
+    EAIR_NOTIFY_EMAIL  Recipient address(es), comma-separated
 
-Optionally, MAESTRO_MAIL_CONFIG may point to a YAML file with a `mail:`
+Optionally, EAIR_MAIL_CONFIG may point to a YAML file with a `mail:`
 section (host/port/user/pass_env/receivers); env vars take precedence.
 The YAML fallback needs PyYAML; the env-var path is stdlib-only.
 
@@ -34,15 +34,15 @@ from pathlib import Path
 
 def load_mail_config():
     cfg = {
-        'host': os.environ.get('MAESTRO_SMTP_HOST', ''),
-        'port': int(os.environ.get('MAESTRO_SMTP_PORT', '465')),
-        'user': os.environ.get('MAESTRO_SMTP_USER', ''),
-        'password': os.environ.get('MAESTRO_SMTP_PASS', ''),  # set in .env
+        'host': os.environ.get('EAIR_SMTP_HOST', ''),
+        'port': int(os.environ.get('EAIR_SMTP_PORT', '465')),
+        'user': os.environ.get('EAIR_SMTP_USER', ''),
+        'password': os.environ.get('EAIR_SMTP_PASS', ''),  # set in .env
         'receivers': [r.strip() for r in
-                      os.environ.get('MAESTRO_NOTIFY_EMAIL', '').split(',')
+                      os.environ.get('EAIR_NOTIFY_EMAIL', '').split(',')
                       if r.strip()],
     }
-    cfg_path = os.environ.get('MAESTRO_MAIL_CONFIG', '')
+    cfg_path = os.environ.get('EAIR_MAIL_CONFIG', '')
     if cfg_path and os.path.exists(cfg_path):
         import yaml  # extra dep: PyYAML (file-based config only)
         with open(cfg_path) as f:
@@ -56,8 +56,8 @@ def load_mail_config():
             cfg['receivers'] = file_cfg['receivers']
     if not (cfg['host'] and cfg['user'] and cfg['password'] and cfg['receivers']):
         raise SystemExit(
-            "Mail not configured: set MAESTRO_SMTP_HOST/USER/PASS and "
-            "MAESTRO_NOTIFY_EMAIL (or MAESTRO_MAIL_CONFIG).")
+            "Mail not configured: set EAIR_SMTP_HOST/USER/PASS and "
+            "EAIR_NOTIFY_EMAIL (or EAIR_MAIL_CONFIG).")
     return cfg
 
 
@@ -118,7 +118,7 @@ def build_body(project_dir):
     <pre style="background: #f8f8f8; padding: 12px; border-radius: 4px; font-size: 13px; overflow-x: auto; white-space: pre-wrap;">{report_text}</pre>
 
     <p style="color: #888; font-size: 12px; margin-top: 24px;">
-    Sent by Maestro &mdash; {title} ({venue})
+    Sent by the conductor &mdash; {title} ({venue})
     </p>
     </body></html>
     """
@@ -156,7 +156,7 @@ def send_email(mail_cfg, subject, html_body, attachments, dry_run=False):
 
     msg = MIMEMultipart()
     msg['Subject'] = Header(subject, 'utf-8')
-    msg['From'] = formataddr(("Maestro", mail_cfg['user']))
+    msg['From'] = formataddr(("the conductor", mail_cfg['user']))
 
     # HTML body
     msg.attach(MIMEText(html_body, 'html', 'utf-8'))
@@ -202,7 +202,7 @@ def main():
     html_body, title, venue = build_body(args.project_dir)
     attachments = collect_attachments(args.project_dir, title=title, venue=venue)
 
-    subject = f"[Maestro] Pipeline Complete: {title} ({venue})"
+    subject = f"[the conductor] Pipeline Complete: {title} ({venue})"
 
     success = send_email(mail_cfg, subject, html_body, attachments, dry_run=args.dry_run)
     if success:

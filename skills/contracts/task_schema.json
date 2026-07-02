@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://maestro.local/agent-inspector/task",
+  "$id": "https://conductor.local/agent-inspector/task",
   "title": "Agent Task",
   "description": "Universal task schema dispatched to any agent in the Inspector architecture.",
   "type": "object",

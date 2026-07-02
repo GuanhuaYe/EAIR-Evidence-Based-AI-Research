@@ -26,7 +26,7 @@ Probing size/format BEFORE download (saves disk): `ssh gpu-host "huggingface-cli
 Before ANY `huggingface-cli download`, `wget`, or dataset acquisition:
 
 0. **Bootstrap / staleness check:**
-   - If `$PROJECT_ROOT/.shared_inventory.md` does not exist -> run `bash ~/.claude/skills/maestro/scripts/refresh_inventory.sh` first
+   - If `$PROJECT_ROOT/.shared_inventory.md` does not exist -> run `bash ~/.claude/skills/conductor/scripts/refresh_inventory.sh` first
    - If file mtime > 3600s old (check with `stat -c %Y`) -> force-refresh before grep
 
 1. **Read** `$PROJECT_ROOT/.shared_inventory.md` -- it lists every model + dataset currently in the shared model/data directories on gpu-host (`$MODELS_DIR`, `$DATA_DIR`). Grep candidate keyword.
@@ -48,7 +48,7 @@ Before ANY `huggingface-cli download`, `wget`, or dataset acquisition:
    ssh gpu-host "source ~/miniforge3/etc/profile.d/conda.sh && conda activate $ENVS_DIR/vllm-0.21-gemma4 && huggingface-cli download <repo> --local-dir $MODELS_DIR/huggingface/hub/models--<org>--<name>/"
    ```
 
-5. **Immediately after** any download/create, refresh: `bash ~/.claude/skills/maestro/scripts/refresh_inventory.sh`
+5. **Immediately after** any download/create, refresh: `bash ~/.claude/skills/conductor/scripts/refresh_inventory.sh`
 
 **Incident (internal project, 2026):** during a rebuttal experiment, a 64GB model was downloaded without checking inventory; an equivalent model was already present under `$MODELS_DIR/huggingface/hub/`. Wasted bandwidth + a setgid lock requiring admin chmod. Rule: ALWAYS grep the inventory before any download.
 

@@ -159,7 +159,7 @@ Execution layer:
 
 | Skill | What it does | Status |
 |---|---|---|
-| `maestro` | the conductor: dispatch-only orchestration, hard rules, gates, ledgers | Stable |
+| `conductor` | dispatch-only orchestration: hard rules, gates, ledgers | Stable |
 | `agents/` | role cards for the specialist agents (Coder, Auditor, Engineer, Runner, ...) | Stable |
 | `supervisor` | gate decisions and checkpoint logic | Stable |
 | `research-autonomy-contract` | when the pipeline may proceed alone vs must ask a human | Beta |

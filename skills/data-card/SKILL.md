@@ -168,9 +168,9 @@ Output: `data_card/artifact_evaluation/` directory tree.
   check formatting / banned tokens.
 - `citation-verifier` — runs on any new cites introduced (especially
   in datasheet motivation and citing prior datasets).
-- Maestro — handoffs:
+- the conductor — handoffs:
   - If checklist Stage 2 flags missing evidence, surface as new
-    P-task to Maestro (probably a missing ablation or sensitivity
+    P-task to the conductor (probably a missing ablation or sensitivity
     experiment).
   - Code release URL coordination with the actual repository.
 

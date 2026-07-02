@@ -6,11 +6,11 @@ This keeps the supervision topology intact: the human's words never enter a
 running agent's context — they arrive as a file.
 
 Env (set in .env):
-  MAESTRO_SMTP_HOST / MAESTRO_SMTP_PORT (SSL, default 465)
-  MAESTRO_SMTP_USER / MAESTRO_SMTP_PASS   sender account
-  MAESTRO_IMAP_HOST                       default: smtp host with imap. prefix
-  MAESTRO_NOTIFY_EMAIL                    the human's address (recipient)
-  MAESTRO_ESC_TTL_HOURS                   confirmation-code lifetime (default
+  EAIR_SMTP_HOST / EAIR_SMTP_PORT (SSL, default 465)
+  EAIR_SMTP_USER / EAIR_SMTP_PASS   sender account
+  EAIR_IMAP_HOST                       default: smtp host with imap. prefix
+  EAIR_NOTIFY_EMAIL                    the human's address (recipient)
+  EAIR_ESC_TTL_HOURS                   confirmation-code lifetime (default
                                           24h); expired escalations are marked
                                           for re-escalation, never read
 
@@ -22,7 +22,7 @@ audit but not required — you can reply from any account that has the code.
 
 Usage:
   mail_bridge.py send  --project-dir DIR --subject "..." --body "..." [--body-file F]
-      sends to MAESTRO_NOTIFY_EMAIL with a token like [ESC-1a2b3c4d] in the
+      sends to EAIR_NOTIFY_EMAIL with a token like [ESC-1a2b3c4d] in the
       subject; records escalations/<token>.json (status: pending).
   mail_bridge.py poll  --project-dir DIR
       for every pending token, searches IMAP for a reply (subject contains
@@ -47,11 +47,11 @@ def env(name, default=None, required=False):
 
 def smtp_cfg():
     return {
-        "host": env("MAESTRO_SMTP_HOST", required=True),
-        "port": int(env("MAESTRO_SMTP_PORT", "465")),
-        "user": env("MAESTRO_SMTP_USER", required=True),
-        "pass": env("MAESTRO_SMTP_PASS", required=True),
-        "to": env("MAESTRO_NOTIFY_EMAIL", required=True),
+        "host": env("EAIR_SMTP_HOST", required=True),
+        "port": int(env("EAIR_SMTP_PORT", "465")),
+        "user": env("EAIR_SMTP_USER", required=True),
+        "pass": env("EAIR_SMTP_PASS", required=True),
+        "to": env("EAIR_NOTIFY_EMAIL", required=True),
     }
 
 
@@ -64,7 +64,7 @@ def cmd_send(args):
     body = args.body or ""
     if args.body_file:
         body += "\n\n" + Path(args.body_file).read_text()
-    body += (f"\n\nCONFIRMATION CODE (valid {env('MAESTRO_ESC_TTL_HOURS', '24')}h):\n"
+    body += (f"\n\nCONFIRMATION CODE (valid {env('EAIR_ESC_TTL_HOURS', '24')}h):\n"
              f"    {pretty}\n"
              "To authorize your decision, reply to this email and COPY THE CODE "
              "into your reply text. A reply without the code (or with the code "
@@ -87,7 +87,7 @@ def cmd_send(args):
 
 
 def _imap_connect(c):
-    host = env("MAESTRO_IMAP_HOST", c["host"].replace("smtp.", "imap.", 1))
+    host = env("EAIR_IMAP_HOST", c["host"].replace("smtp.", "imap.", 1))
     M = imaplib.IMAP4_SSL(host, 993)
     M.login(c["user"], c["pass"])
     # RFC 2971 ID; some providers (e.g. netease) reject SELECT without it
@@ -138,7 +138,7 @@ def _subject(m):
 
 def cmd_poll(args):
     c = smtp_cfg()
-    ttl_s = float(env("MAESTRO_ESC_TTL_HOURS", "24")) * 3600
+    ttl_s = float(env("EAIR_ESC_TTL_HOURS", "24")) * 3600
     esc_dir = Path(args.project_dir) / "escalations"
     pending = []
     for f in sorted(esc_dir.glob("ESC-*.json")) if esc_dir.is_dir() else []:

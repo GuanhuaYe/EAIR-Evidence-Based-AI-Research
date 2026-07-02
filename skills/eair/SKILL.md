@@ -45,7 +45,7 @@ doesn't match a subcommand, ask which one they meant and show the table:
      checks and citation verification (optional, degrade gracefully).
    - **Email loop**: progress notifications wanted? If yes, collect SMTP
      settings, send a test mail via
-     `maestro/scripts/mail_bridge.py send`, and explain the reply-back
+     `conductor/scripts/mail_bridge.py send`, and explain the reply-back
      channel: escalation mails carry a one-time confirmation code (24h
      TTL); the user replies from any account and copies the code into
      the reply text; `mail_bridge.py poll` (cron or watcher) verifies
@@ -72,14 +72,14 @@ doesn't match a subcommand, ask which one they meant and show the table:
    <project>/
      tree.json           # empty knowledge tree {nodes:{}, experiments:{}}
      EVOLUTION.md        # ledger header + comparability rules + empty veto list
-     MAESTRO_LOG.json    # {"entries": []}
+     CONDUCTOR_LOG.json    # {"entries": []}
      HEARTBEAT.jsonl     # empty
      experiments/
    ```
 3. Fill an autonomy contract with the user (see
    `research-autonomy-contract` skill) so unattended stretches have
    defined escalation rules.
-4. Hand control to the conductor protocol: read `maestro/SKILL.md` and run
+4. Hand control to the conductor protocol: read `conductor/SKILL.md` and run
    Stage 1 (idea triage via `idea-evaluator`, kill-cheap first), then the
    mandatory experiment chain. Every experiment goes through `big-finding`
    bundle rules — no single-arm runs, verdict rules preregistered.
@@ -100,7 +100,7 @@ ask for one — grilling requires a document, not a conversation.
 
 ## /eair status
 
-Observer behavior, strictly read-only: read `MAESTRO_LOG.json`,
+Observer behavior, strictly read-only: read `CONDUCTOR_LOG.json`,
 `SUPERVISOR_BRIEF.md` (if present), `tree.json`, the tail of
 `HEARTBEAT.jsonl`, and the latest `EVOLUTION.md` entry. Summarize: current
 stage, last verdict, running work, blockers. Do not dispatch anything, do

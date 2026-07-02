@@ -120,7 +120,7 @@ Use `scripts/visualize_tree.py [--node-filter ...] [--status ...]`.
 
 ## Lineage broken markers
 
-When a comparison from OUTSIDE the bundle system (e.g., a Maestro
+When a comparison from OUTSIDE the bundle system (e.g., a the conductor
 experiment) is referenced in a hypothesis, mark with
 `lineage_warning: "..."` in node notes.
 

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://maestro.local/agent-inspector/pipeline-state",
+  "$id": "https://conductor.local/agent-inspector/pipeline-state",
   "title": "Pipeline State",
   "description": "Enhanced PIPELINE_STATE.json format with agent directory tracking for the Inspector architecture.",
   "type": "object",
