@@ -141,6 +141,12 @@ SSH. This is how we run it; see [docs/advanced.md](docs/advanced.md). Tiers
 
 ## Skills
 
+Entry point:
+
+| Skill | What it does | Status |
+|---|---|---|
+| `eair` | the front door: routes `start` / `find` / `grill` / `status` / `paper` to the right layer | Stable |
+
 Science layer:
 
 | Skill | What it does | Status |
@@ -148,12 +154,6 @@ Science layer:
 | `big-finding` | hypothesis-driven discovery loop: bundles, preregistered verdicts, append-only knowledge tree | Stable |
 | `grill-doc` | evidence-gated design interrogation; quotes machine-checked; the GPU ignition gate | Stable |
 | `idea-evaluator` | triage ideas by how cheaply they can be killed; novelty as attackable search queries | Stable |
-
-Entry point:
-
-| Skill | What it does | Status |
-|---|---|---|
-| `eair` | the front door: `/eair start|find|grill|status|paper` routes to the right layer | Stable |
 
 Execution layer:
 
