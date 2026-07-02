@@ -2,15 +2,13 @@
 
 Fixed question banks per methodology failure category. The griller asks
 these — and only these — plus their conditional follow-ups. Free-form
-improvisation is forbidden (lesson from an earlier internal project:
-per-category deep interrogation beats broad free-form questioning; the
-fixed decision tree is what got evidence retrieval from 2/4 to 4/4).
+improvisation is forbidden (free-form questioning drifts toward whatever the doc already answers well).
 
 Each question: `qid | criticality | question | what satisfies it`.
 Criticality: `critical` (GAP/HAND-WAVED → BLOCK) or `major` (→ PASS-WITH-NOTES).
 Follow-ups fire only when the parent condition holds.
 
-Sources: postmortems of two internal projects (2026), plus
+Sources: recurring failure patterns in LLM-evaluation research, plus
 probing-methodology literature (Hewitt & Liang control tasks; "On the
 Data Requirements of Probing" 2202.12801; Card et al. 2020 power).
 
@@ -27,7 +25,7 @@ Data Requirements of Probing" 2202.12801; Card et al. 2020 power).
   What is each subgroup's label base rate, and where does the doc commit
   to reporting per-subgroup metrics alongside the pooled number?
   *Satisfied by*: per-subgroup base rates + an explicit per-subgroup
-  reporting plan. (Internal incident: two subgroups with 37% vs 74%
+  reporting plan. (Failure pattern: two subgroups with 37% vs 74%
   base rates pooled into one AUROC — the classifier could learn
   subgroup identity alone.)
 - **CONF-3 | major** *(follow-up: fires if pooling)* — Can any input
@@ -42,13 +40,13 @@ Data Requirements of Probing" 2202.12801; Card et al. 2020 power).
   grouped by the natural correlated unit (question ID, patient,
   document, entity)? Quote the grouping key.
   *Satisfied by*: explicit group-CV or grouped-split specification.
-  (Internal incident: paired rows derived from the same question were
+  (Failure pattern: paired rows derived from the same question were
   split across folds.)
 - **LEAK-2 | critical** — At any point, does feature computation, data
   selection, or preprocessing touch labels or test data (including
   fitting PCA/scalers outside the CV fold)?
   *Satisfied by*: a statement that all fitting happens inside folds /
-  on train only. (Internal incident: a judge component retrieved other
+  on train only. (Failure pattern: a judge component retrieved other
   gold items — check tooling can't reach eval data either.)
 - **LEAK-3 | major** — Is the final eval set isolated from every tuning
   and model-selection decision? How many times has it been evaluated
@@ -62,14 +60,14 @@ Data Requirements of Probing" 2202.12801; Card et al. 2020 power).
   condition) for each headline metric — after filtering to the
   relevant subset (e.g. only wrong-answer samples)? State the smallest
   cell.
-  *Satisfied by*: per-cell counts in the doc. (Internal incident: a
+  *Satisfied by*: per-cell counts in the doc. (Failure pattern: a
   headline metric rested on n=65.)
 - **POW-2 | critical** *(follow-up: fires if any model has learned
   parameters)* — Feature dimensionality vs effective n for every fitted
   model? If p is within 10x of n, what regularization/reduction is used
   and where is it fit?
   *Satisfied by*: explicit p, n, and in-fold reduction plan.
-  (Internal incident: 3584-dim features fed into a 65-sample logistic
+  (Failure pattern: 3584-dim features fed into a 65-sample logistic
   regression.)
 - **POW-3 | critical** — How is uncertainty quantified for each headline
   number (bootstrap CI / permutation test), and what is the
@@ -86,7 +84,7 @@ Data Requirements of Probing" 2202.12801; Card et al. 2020 power).
   this literature (name + citation), and is the plan to run the ORIGINAL
   method or a proxy? If a proxy: quote where the doc justifies it.
   *Satisfied by*: named baseline with citation and faithful-implementation
-  commitment. (Internal incident: a "self-consistency baseline" was
+  commitment. (Failure pattern: a "self-consistency baseline" was
   actually cross-view answer agreement, never Wang et al. 2022
   temperature sampling — the single most reviewer-catchable hole.)
 - **BASE-2 | major** — Do baselines get the same compute budget and
@@ -94,7 +92,7 @@ Data Requirements of Probing" 2202.12801; Card et al. 2020 power).
   *Satisfied by*: a budget-parity statement.
 - **BASE-3 | major** — Are oracle upper and random lower bounds planned,
   so the achievable headroom is known before optimizing?
-  *Satisfied by*: oracle/random bound specification. (Internal lesson:
+  *Satisfied by*: oracle/random bound specification. (Failure pattern:
   the oracle-random frame is what killed a dead hypothesis cleanly.)
 
 ## C5 Metric validity
@@ -119,7 +117,7 @@ Data Requirements of Probing" 2202.12801; Card et al. 2020 power).
   conditions (temperature, concurrency, seeds) pinned and recorded per
   reported number?
   *Satisfied by*: a conditions table or equivalent commitment.
-  (Internal incident: concurrency=8 flips results at temp=0;
+  (Failure pattern: concurrency=8 flips results at temp=0;
   cross-version F1 incomparable.)
 - **REP-2 | major** — Is run-to-run variance measured before any single
   number is treated as a conclusion (repeat runs / seed sweep)?
@@ -155,7 +153,7 @@ instead of adding griller discretion (forbidden).
 
 ## Edit log
 
-- 2026-07-02 — Initial manual (v1). Sources: internal project
+- 2026-07-02 — Initial manual (v1).
   postmortems. Regression run 1 (defender=sonnet, doc=an internal
   pre-run design with 4 pre-registered gaps): 4/4 gold gap areas
   surfaced, verdict BLOCK — PASS. POW-3 grounded-but-weak instance

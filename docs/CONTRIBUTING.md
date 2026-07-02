@@ -8,10 +8,9 @@ they are the reason this repo exists:
    enough that a second person — or a script — reaches the same judgment
    from the same inputs. "the LLM weighs the
    overall picture" counts as a design defect here.
-2. **Rules must cite their failure.** Every hard rule, gate, or veto you add
-   must name the concrete failure that motivated it (an incident, a
-   measured collapse, a reproduced trap). A rule that can't point to a real
-   failure will be rejected.
+2. **Rules must name their failure mode.** Every hard rule, gate, or veto
+   you add must state the concrete failure it prevents, specifically enough
+   to be testable. Rules justified only by taste will be rejected.
 
 ## Adding a skill
 

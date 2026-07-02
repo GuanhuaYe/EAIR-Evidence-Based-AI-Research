@@ -50,7 +50,7 @@ Before ANY `huggingface-cli download`, `wget`, or dataset acquisition:
 
 5. **Immediately after** any download/create, refresh: `bash ~/.claude/skills/conductor/scripts/refresh_inventory.sh`
 
-**Incident (internal project, 2026):** during a rebuttal experiment, a 64GB model was downloaded without checking inventory; an equivalent model was already present under `$MODELS_DIR/huggingface/hub/`. Wasted bandwidth + a setgid lock requiring admin chmod. Rule: ALWAYS grep the inventory before any download.
+Downloading a model that already sits under `$MODELS_DIR/huggingface/hub/` wastes tens of GB of bandwidth and disk and can leave cross-user permission locks behind. Rule: ALWAYS grep the inventory before any download.
 
 
 ## Core Loop

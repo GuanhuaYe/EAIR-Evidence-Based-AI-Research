@@ -47,7 +47,7 @@ Path conventions (override via environment variables; see also `config.yaml`):
    - Invoke methodology Skills (idea-evaluator, **grill-doc**, intro-drafter, tech-paper-template, benchmark-paper-template, figure-designer, figure-coder, pre-submission-reviewer, citation-verifier, venue-aware-polishing, data-card, reviewer-panel, rebuttal-drafter, research-autonomy-contract, **big-finding**) to ground stage decisions and pass structured output as context to the next dispatched agent. See "Methodology Skills" section below.
    - **WHEN TO HAND OFF TO big-finding**: if user says "I don't care about the paper", "real science", "Nature-grade", or if the conductor experiments produce a counter-intuitive / cross-version-inconsistent result that demands controlled investigation — the conductor is engineering pipeline (ships papers), big-finding is scientific discovery loop (chases generalizable findings via bundle-based hypothesis testing + knowledge tree). The two coexist: big-finding consumes the conductor's agent chain to execute each bundle arm.
 
-10. **EVOLUTION.md ledger — mandatory per project.** Every paper/project root MUST maintain `EVOLUTION.md` in the ledger format: each entry = what changed / test set + model + conditions / metrics quoted verbatim / mechanism / lesson, plus a **metric-comparability rules** section (cross-version numbers not comparable unless test set + model + conditions match — annotate) and a **"do-not-retry" veto list** (vetoed directions with the evidence that killed them). Supervisor MUST read the veto list at every Gate decision; grill-doc's defender cites this ledger as primary evidence (REP-3). CONDUCTOR_LOG.json is the append-only dispatch log; EVOLUTION.md is the structured negative-results memory — both required, neither substitutes for the other. Rationale (internal projects, 2026): one project converged in 4 generations because of this discipline; another burned GPU time re-learning a published trap (n=50 underpowered probing) that a veto list would have caught.
+10. **EVOLUTION.md ledger — mandatory per project.** Every paper/project root MUST maintain `EVOLUTION.md` in the ledger format: each entry = what changed / test set + model + conditions / metrics quoted verbatim / mechanism / lesson, plus a **metric-comparability rules** section (cross-version numbers not comparable unless test set + model + conditions match — annotate) and a **"do-not-retry" veto list** (vetoed directions with the evidence that killed them). Supervisor MUST read the veto list at every Gate decision; grill-doc's defender cites this ledger as primary evidence (REP-3). CONDUCTOR_LOG.json is the append-only dispatch log; EVOLUTION.md is the structured negative-results memory — both required, neither substitutes for the other. Rationale: cross-version numbers without matching conditions are incomparable, and pipelines quietly re-walk dead ends (including published traps like underpowered small-n probing) unless the kill evidence stays visible at every gate.
 
 11. **Shared resources check before acquisition.** BEFORE dispatching any agent whose task involves `huggingface-cli download`, `wget` model/dataset, `pip install <heavy-ML-pkg>`, conda env creation, or `git clone <dataset>`:
     - Read `$PROJECT_ROOT/.shared_inventory.md` (refresh manually: `bash ~/.claude/skills/conductor/scripts/refresh_inventory.sh`; hourly auto-refresh is optional heartbeat automation, not included in v1)
@@ -57,7 +57,7 @@ Path conventions (override via environment variables; see also `config.yaml`):
       - Per-user envs: `~/miniforge3/envs/<name>/`
       - `python -m venv` is forbidden here — venv shares system Python and breaks cross-user CUDA isolation.
     - Bypass acquisition only after confirmed miss; refresh inventory immediately after the new env/model lands.
-    - **Incident (internal project, 2026):** a 64GB model download was initiated without checking inventory — an equivalent 49GB model had been cached in the shared model directory for weeks. Wasted disk + a permissions lock requiring admin cleanup.
+    - Re-downloading tens of GB that already sit on a shared mount wastes disk and creates cross-user permission conflicts; the inventory check exists to make that impossible.
     - **Correct activation pattern (mamba -p envs do NOT ship `bin/activate`):**
       ```
       ssh gpu-host "source ~/miniforge3/etc/profile.d/conda.sh && conda activate $ENVS_DIR/<env> && python -m ..."
@@ -99,11 +99,7 @@ Coder → Auditor(CP1) → Engineer → [grill-doc design gate] → Supervisor �
 
 **GPU pre-launch gate:** nvidia-smi + `ps aux|grep run_vllm` + EAIR_LOG running entries. ANY fail → stop.
 
-Incident (internal project, 2026): a multi-turn 5-step pipeline accumulated tokens across turns.
-- max_model_len=2560: failed step 3 (needed 2561)
-- max_model_len=4096: failed 100% samples (steps 3-5 all overflow)
-- max_model_len=16384: success
-- **Rule: multi-turn max_model_len must be ≥ 4× single-step max tokens. Even parameter reruns MUST pass through Engineer.**
+**Rule: multi-turn max_model_len must be ≥ 4× single-step max tokens.** Tokens accumulate across turns, so a length budget that clears steps 1–2 can fail 100% of samples at later steps — a failure mode single-step smoke tests never exercise. Even parameter reruns MUST pass through Engineer.
 
 ## Pipeline Stages
 
@@ -173,7 +169,7 @@ On wake-up: check state against every rule above → issue found? fix directly, 
 
 **Log format:** `{"entries":[{"timestamp","action","agent","status/verdict",...}]}`
 
-## Data Integrity Rules (learned from an internal project, 2026)
+## Data Integrity Rules
 
 ### Rule D1: Shared Data Schema
 Every experiment MUST define `{exp_dir}/config/schema.json` at Phase 0 specifying:
@@ -191,7 +187,7 @@ Before full-scale runs, Coder MUST write `{exp_dir}/tests/test_pipeline_e2e.py`:
 ### Rule D3: Concept-Implementation Verification
 When SUPERVISOR_BRIEF defines a concept (e.g., "regime"), Coder implements it, and BEFORE proceeding:
 - Auditor samples 50+ items per category and verifies implementation matches concept
-- Example: "multi_path = multiple valid surface forms" ≠ "annotator disagreement" (TextVQA lesson)
+- Example: "multiple valid surface forms of one answer" ≠ "annotator disagreement" — conflating them corrupts multi-gold evaluation
 - Cohen's kappa or equivalent if SUPERVISOR_BRIEF requires it — don't skip
 
 ### Rule D4: No Fabricated Numbers in Paper
@@ -220,7 +216,7 @@ Before Phase 3 perturbation starts, Auditor MUST verify:
 - Same item gets same `is_correct_official` regardless of which script evaluates it
 - Test with 100 items across all datasets
 
-## Debugging Protocol (learned from a multi-gold evaluation bug, internal project, 2026)
+## Debugging Protocol
 
 When experimental results contradict predictions, debug in this **exact order**:
 
@@ -230,7 +226,7 @@ When experimental results contradict predictions, debug in this **exact order**:
 
 **NEVER skip steps 1-2 and jump to step 3.** Most "method failures" are actually data/evaluation bugs.
 
-Incident (internal project, 2026): a prompt ensemble appeared to "not work" (Δ ≈ -3%). 6+ hours were spent debugging ensemble voting strategy (verbose output contamination, answer exclusion, shortest-output selection, etc.) — all wrong direction. Root cause: evaluation used `answers=[single_gold]` from baseline JSONL instead of full multi-gold from raw data. After fixing: Δ = +0.5 to +1.6%. A cross-model audit flagged the data inconsistency but it was dismissed as "cosmetic".
+A classic instance: a method that appears to "not work" because the evaluator silently compares against a single gold answer where the dataset defines several. The method debugging that follows is all wasted motion; the sign of the effect flips once evaluation is fixed.
 
 **Rule: if an audit flags a data inconsistency as "low severity", verify with a 5-line script before dismissing.**
 

@@ -15,20 +15,18 @@ license: CC-BY-4.0
 
 # Grill-Doc — Evidence-Gated Design Interrogation
 
-## Why this shape (lessons from five generations of an earlier internal project, do not regress)
+## Why this shape (do not regress)
 
 This skill deliberately does NOT use free-form adversarial debate
-(griller vs defender arguing). An earlier internal project's evolution
-ledger proved that paradigm fails: a defense role always finds
-"we'll refine it / it's delegated / it runs in parallel" excuses
-(counter-argument → R 0-8%), judges get swayed by rhetoric, and
-prompt-tuning the judge never converges (six versions stuck at F1~60).
-What converged was **triage + fixed interrogation manual**: triage →
-per-category deep interrogation via a fixed decision-tree manual →
-evidence gate → verdict computed by code. This skill is that paradigm
-applied to research documents.
+(griller vs defender arguing). That paradigm fails structurally: a
+defense role always finds "we'll refine it / it's delegated / it runs
+in parallel" excuses, judges get swayed by rhetoric, and prompt-tuning
+the judge does not converge. What does converge is **triage + fixed
+interrogation manual**: triage → per-category deep interrogation via a
+fixed decision-tree manual → evidence gate → verdict computed by code.
+This skill is that paradigm applied to research documents.
 
-Iron rules inherited from that project (structural, not prompt-level):
+Iron rules (structural, not prompt-level):
 
 1. **Defender never defends.** Its ONLY job: answer each question by
    quoting the doc verbatim, or declare `NOT-IN-DOC`. Rationalization,
@@ -147,10 +145,10 @@ dispatched; Stage 1: idea does not pass Gate1).
 
 ## Quality metric for the grill itself
 
-Evidence alignment > verdict (lesson from an earlier internal project:
-evidence-ID alignment beats verdict precision/recall — a verdict is a
-yes/no that can be guessed; the real signal is whether interrogation
-forced out the SPECIFIC evidence an expert would rely on). Maintain a
+Evidence alignment > verdict: a verdict is a yes/no that can be
+guessed; the real signal is whether the interrogation forced out the
+SPECIFIC evidence an expert would rely on. Score the grill by
+evidence-ID alignment, not verdict precision/recall. Maintain a
 regression gold set in `regression/`: a design doc with known,
 pre-registered gaps; a good manual must surface most of those gaps
 from the pre-run doc. When editing manual.md, re-run the regression

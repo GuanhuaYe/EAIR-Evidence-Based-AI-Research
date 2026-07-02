@@ -263,9 +263,9 @@ You MUST read it before every gate decision. You MUST append to it after every d
 ### Why this exists
 
 Without this file, you will lose context across sessions and make decisions based on
-partial data. Incident (internal project, 2026): v1 showed weak results (AUROC 0.513), but v2/v3
-showed real signal (AUROC 0.556, p<0.0001). Without version history, a new Supervisor
-session would only see v1 and incorrectly recommend ABANDON.
+partial data. The canonical failure: v1 of an experiment shows a weak result, v2/v3 show a
+real one after fixes — a fresh Supervisor session that only sees v1 recommends ABANDON on
+a direction that is actually alive. Version history is what prevents that.
 
 ---
 

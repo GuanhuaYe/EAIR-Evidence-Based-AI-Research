@@ -66,17 +66,17 @@ ssh gpu-host nvidia-smi
 rsync -avz gpu-host:$REMOTE_ROOT/myproj/results.json ./myproj/
 ```
 
-Notes from production:
+Operational rules:
 
-- Always end launch commands with `echo EXIT=$? >> run.log` — the Runner
-  agent checks exit codes, not log tails.
+- End launch commands with `echo EXIT=$? >> run.log`; the Runner agent
+  verifies exit codes, not log tails.
 - Multi-turn inference: budget `max_model_len ≥ 4×` the single-step maximum
-  token count. (Incident: a 5-step pipeline passed at steps 1–2 and failed
-  100% of samples at steps 3–5 because the length budget assumed one step.)
-- Archive with `tar.gz`, not zip — zip's missing EOCD on truncated transfers
-  has silently corrupted archives for us twice.
-- If you power-limit GPUs (thermal/noise), expect roughly proportional
-  throughput loss and re-estimate runtimes before preregistering deadlines.
+  token count — tokens accumulate across turns, and a budget that clears
+  early steps can fail all samples at later ones.
+- Archive with `tar.gz`. A zip truncated in transfer is silently unreadable
+  (its central directory lives at the end of the file); tar fails loudly.
+- Power-limited GPUs lose roughly proportional throughput; re-estimate
+  runtimes before committing to deadlines.
 
 ## Optional: heartbeat automation
 
