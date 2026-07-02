@@ -50,7 +50,10 @@ Four principles:
    generalize.** "Better on MIMIC-III by +0.03" is not a finding.
    "X mechanism beats Y mechanism across N distinct domains with
    stat-sig effect" is a finding. Anything less is a step on the
-   path.
+   path. In evidence-hierarchy terms: an audited bundle verdict is
+   level-3 evidence; the findings catalogue accepts only level-4 —
+   level-3 results reproduced across models or domains. Claim wording
+   is capped by level: "we find evidence of" is not "we show".
 
 4. **One experiment, one agent.** LLM quality degrades as context
    grows: a fresh, focused context is the model's smart zone; a long
