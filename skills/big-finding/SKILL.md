@@ -288,7 +288,7 @@ mutate. Older snapshots stay readable.
 - `references/experiment_bundle_spec.md` — what counts as complete
 - `references/knowledge_tree_schema.md` — tree.json format
 - `references/analysis_decision_tree.md` — the 6-case decision logic
-- `references/nature_worthy_test.md` — the 5-condition test
+- `references/nature_worthy_test.md` — the 6-condition gate
 - `scripts/tree.py` — CRUD on tree.json
 - `scripts/visualize_tree.py` — ASCII tree of explored paths
 - `scripts/lineage_check.py` — verify bundle protocol controls

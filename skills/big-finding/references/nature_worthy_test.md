@@ -106,7 +106,7 @@ When a node passes all 5:
 1. Append to `findings_catalogue` in `tree.json` with the
    finding's quantitative statement
 2. Generate `<paper_dir>/big_finding/findings/<F-id>.md` containing:
-   - The full 5-condition justification (one paragraph per condition)
+   - The full six-condition justification (one paragraph per condition, N/A conditions justified explicitly)
    - Citation-ready statement (1 sentence, ≤30 words)
    - Open follow-up questions
    - Connection to literature (related prior work)
