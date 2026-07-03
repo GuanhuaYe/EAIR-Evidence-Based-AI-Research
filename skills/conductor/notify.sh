@@ -65,7 +65,7 @@ html = f"""
 <hr>
 <pre>{body}</pre>
 <hr>
-<p style="color:gray;font-size:12px">Sent by the conductor — Claude Code autonomous orchestrator</p>
+<p style="color:gray;font-size:12px">Sent by the EAIR conductor — autonomous research orchestrator</p>
 </body></html>
 """
 
