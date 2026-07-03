@@ -55,18 +55,30 @@ def observe_gpu(host):
     try:
         out = subprocess.run(
             ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", host,
-             "nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader,nounits;"
-             "echo ---; tmux ls 2>/dev/null || true"],
+             "nvidia-smi --query-gpu=utilization.gpu,memory.used,power.draw,power.limit,temperature.gpu --format=csv,noheader,nounits;"
+             "echo ---; tmux ls 2>/dev/null || true;"
+             "echo ---; df --output=pcent ~/Backup 2>/dev/null | tail -1; cat /proc/loadavg 2>/dev/null | cut -d' ' -f1"],
             capture_output=True, text=True, timeout=25)
         if out.returncode != 0:
             return {"reachable": False}
-        gpu_part, _, tmux_part = out.stdout.partition("---")
+        gpu_part, _, rest = out.stdout.partition("---")
+        tmux_part, _, host_part = rest.partition("---")
         gpus = []
         for line in gpu_part.strip().splitlines():
-            u, m = [x.strip() for x in line.split(",")[:2]]
-            gpus.append({"util_pct": int(u), "mem_mib": int(m)})
+            f = [x.strip() for x in line.split(",")]
+            g = {"util_pct": int(f[0]), "mem_mib": int(f[1])}
+            if len(f) >= 5:
+                g.update({"power_w": float(f[2]), "power_cap_w": float(f[3]),
+                          "temp_c": int(f[4])})
+            gpus.append(g)
         tmux = [l.split(":")[0] for l in tmux_part.strip().splitlines() if ":" in l]
-        return {"reachable": True, "gpus": gpus, "tmux": tmux}
+        obs = {"reachable": True, "gpus": gpus, "tmux": tmux}
+        hp = host_part.strip().splitlines()
+        if hp:
+            obs["remote_disk_pct"] = hp[0].strip().lstrip("%").rstrip("%") if hp[0].strip() else None
+            if len(hp) > 1:
+                obs["remote_load1"] = float(hp[1])
+        return obs
     except Exception:
         return {"reachable": False}
 
@@ -152,6 +164,15 @@ def main():
                     writes[d] = datetime.fromtimestamp(m).astimezone().isoformat(timespec="seconds")
 
     tick = {"ts": ts, "newest_writes": writes}
+    # local host vitals (server0): 1-min load, available RAM, project-fs disk use
+    try:
+        tick["load1"] = float(open("/proc/loadavg").read().split()[0])
+        mem = dict(l.split(":")[:2] for l in open("/proc/meminfo").read().splitlines()[:3])
+        tick["mem_avail_gb"] = round(int(mem["MemAvailable"].split()[0]) / 1048576, 1)
+        du = shutil.disk_usage(project)
+        tick["disk_pct"] = round(du.used / du.total * 100)
+    except Exception:
+        pass
     if args.gpu_host:
         tick["gpu_host"] = args.gpu_host
         tick.update(observe_gpu(args.gpu_host))
