@@ -160,6 +160,9 @@ context re-read just to poll.
 
 ### Watch it live
 
+<img width="967" height="1005" alt="50f51756768dccc76f695bcce7237084" src="https://github.com/user-attachments/assets/7e0f5254-aece-4607-8b21-514be25a54e7" />
+
+
 `conductor/scripts/panel.py` serves a single-page console (stdlib only,
 zero tokens): a second-precision clock, GPU ring gauges with VRAM/power
 meters and a utilization history line, per-agent context occupancy parsed
