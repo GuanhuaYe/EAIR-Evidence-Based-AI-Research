@@ -354,7 +354,10 @@ PAGE = r"""<!doctype html><html><head><meta charset="utf-8">
 :root{--bg:#131a21;--panel:#1b232d;--panel2:#202a35;--line:#2b3642;--ink:#e6e2d8;
 --dim:#8b96a4;--acc:#7fb4c9;--good:#6aa87b;--warn:#d1a04a;--crit:#c65f57}
 *{box-sizing:border-box}html{background:var(--bg)}
-body{color:var(--ink);font:14px/1.5 system-ui,sans-serif;max-width:1150px;margin:0 auto;padding:18px 16px 50px}
+body{color:var(--ink);font:14px/1.5 system-ui,sans-serif;max-width:1150px;margin:0 auto;padding:18px 16px 74px}
+#bnav{position:fixed;left:0;right:0;bottom:0;z-index:8;display:flex;justify-content:center;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:var(--panel);border-top:1px solid var(--line)}
+#bnav button{flex:1;max-width:200px;background:none;border:1px solid var(--line);border-radius:5px;color:var(--dim);padding:7px 0;font:inherit;font-size:13px;letter-spacing:.06em;cursor:pointer}
+#bnav button.on{color:var(--acc);border-color:var(--acc);background:#213038}
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;font-size:12.5px}
 header{position:sticky;top:0;z-index:6;background:var(--bg);border-bottom:1px solid var(--line);padding:6px 0 9px;margin-bottom:14px}
 .hrow{display:flex;justify-content:space-between;align-items:baseline}
@@ -418,14 +421,15 @@ table{border-collapse:collapse;width:100%}td{padding:4px 10px 4px 0;border-botto
 <div id="mods"></div>
 <script>
 const MODS=[
- {id:'talk',title:'observer'},
- {id:'cond',title:'conductor — pipeline'},
- {id:'now',title:'now — host & gpu'},
- {id:'agents',title:'workers — dispatched subagents'},
- {id:'hyp',title:'knowledge tree'},
- {id:'exp',title:'experiments'},
- {id:'alarms',title:'clock — alarms'},
- {id:'log',title:'progress log'}];
+ {id:'talk',title:'observer',grp:'agent'},
+ {id:'cond',title:'conductor — pipeline',grp:'agent'},
+ {id:'agents',title:'workers — dispatched subagents',grp:'agent'},
+ {id:'now',title:'gpu',grp:'nvitop'},
+ {id:'hyp',title:'knowledge tree',grp:'log'},
+ {id:'exp',title:'experiments',grp:'log'},
+ {id:'alarms',title:'clock — alarms',grp:'log'},
+ {id:'log',title:'progress log',grp:'log'}];
+const TABS=['agent','nvitop','log'];
 const saved=JSON.parse(localStorage.getItem('order')||'null');
 const order=(saved&&saved.length===MODS.length)?saved:MODS.map(m=>m.id);
 const hts=JSON.parse(localStorage.getItem('hts')||'{}');
@@ -438,6 +442,14 @@ order.forEach(id=>{const m=MODS.find(x=>x.id===id);if(!m)return;
  d.innerHTML=`<div class="mod-h" draggable="true"><span>${m.title}</span><span class="dim">⋮⋮</span></div><div class="mod-b" id="${id}">${inner}</div>`;
  if(hts[id])d.querySelector('.mod-b').style.height=hts[id]+'px';
  root.appendChild(d);});
+const nav=document.createElement('nav');nav.id='bnav';
+nav.innerHTML=TABS.map(t=>`<button data-tab="${t}">${t}</button>`).join('');
+document.body.appendChild(nav);
+function showTab(t){localStorage.setItem('tab',t);
+ MODS.forEach(m=>{const d=document.getElementById('mod-'+m.id);if(d)d.style.display=m.grp===t?'':'none';});
+ nav.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));}
+nav.addEventListener('click',e=>{const b=e.target.closest('button');if(b)showTab(b.dataset.tab);});
+showTab(TABS.includes(localStorage.getItem('tab'))?localStorage.getItem('tab'):'agent');
 let dragEl=null;
 root.addEventListener('dragstart',e=>{dragEl=e.target.closest('.mod');dragEl.classList.add('drag');});
 root.addEventListener('dragend',()=>{if(dragEl)dragEl.classList.remove('drag');dragEl=null;
@@ -489,8 +501,7 @@ async function poll(){try{
     `<tr><td class="dim">GPU${p.gpu}</td><td>${esc(p.pid)}</td><td>${esc(p.user)}</td>
      <td class="dim">${esc(p.time)}</td><td>${(p.mem/1024).toFixed(1)}G</td>
      <td class="dim" style="word-break:break-all">${esc(p.cmd)}</td></tr>`).join('')
-    ||'<tr><td class="dim">no compute processes</td></tr>'}</table>
-   <div class="small dim" style="margin-top:6px">server0 load ${s.host.load1} · disk ${s.host.disk_pct}% · ram free ${s.host.mem_avail_gb}G · tmux: ${esc((s.gpu.tmux||[]).join(', ')||'none')}</div>`);
+    ||'<tr><td class="dim">no compute processes</td></tr>'}</table>`);
  const hist=s.gpu.hist||[];const hc=document.getElementById('ghist');
  if(hc&&hist.length>1){hc.width=hc.clientWidth;const c2=hc.getContext('2d');
   const W2=hc.width,H2=hc.height;
