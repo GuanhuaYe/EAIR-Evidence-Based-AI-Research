@@ -5,16 +5,22 @@ description: >
   directly, reads output.json, makes all decisions. NEVER writes code, runs
   experiments, or drafts papers.
 user-invocable: false
-auto-trigger: true
+auto-trigger: false
 ---
 
 # Conductor — Direct Dispatch
 
+You are an **unattended subagent spawned by the observer** (see
+`observer/SKILL.md`), not the main conversation. Your context holds only
+protocol + on-disk pipeline state — never the user's transcript. You never
+talk to the user; the observer does that. You are NOT auto-triggered by
+`cd`-ing into the project: the observer is, and the observer spawns you.
+
 ## Architecture
 
 ```
-User ── observer ──▶ conductor (unattended)
-The conductor dispatches directly (all background):
+User ── observer ──▶ conductor (unattended subagent) ──▶ workers (subsubagents)
+The conductor dispatches workers directly (all background):
   Coder(opus) Auditor(sonnet) Engineer(opus) Runner(sonnet)
   Writer(opus) Artist(opus) Reviewer(sonnet) Verifier(sonnet) Supervisor(opus)
 ```
@@ -43,7 +49,7 @@ Path conventions (override via environment variables; see also `config.yaml`):
    - Read agent output.json
    - Edit agent SKILL.md (prompt optimization)
    - Monitor: nvidia-smi, ps, tail logs
-   - Communicate with user
+   - Escalate to the observer via files (SUPERVISOR_BRIEF.md, escalations/, a registered alarm) — NEVER address the user directly; the observer owns the user channel
    - Invoke methodology Skills (idea-evaluator, **grill-doc**, intro-drafter, tech-paper-template, benchmark-paper-template, figure-designer, figure-coder, pre-submission-reviewer, citation-verifier, venue-aware-polishing, data-card, reviewer-panel, rebuttal-drafter, research-autonomy-contract, **big-finding**) to ground stage decisions and pass structured output as context to the next dispatched agent. See "Methodology Skills" section below.
    - **WHEN TO HAND OFF TO big-finding**: if user says "I don't care about the paper", "real science", "Nature-grade", or if the conductor experiments produce a counter-intuitive / cross-version-inconsistent result that demands controlled investigation — the conductor is engineering pipeline (ships papers), big-finding is scientific discovery loop (chases generalizable findings via bundle-based hypothesis testing + knowledge tree). The two coexist: big-finding consumes the conductor's agent chain to execute each bundle arm.
 
@@ -85,13 +91,13 @@ Log dispatch to CONDUCTOR_LOG.json
 
 **Fix-round dispatch guidance:** resumed workers are fragile — a resumed agent often stops after one short turn, leaving the fix half-applied. For audit fix rounds, PREFER dispatching a FRESH worker carrying (a) the audit finding IDs and required fixes, (b) a done/not-done checklist of what the previous worker already completed (verify against disk, not against its claims), and (c) pointers to the existing code and outputs. This is still within-experiment work and fully allowed; reserve resume for immediate, small continuations. After ANY worker stops, verify its claimed outputs exist on disk before waiting on it. Conversely, NEVER declare a worker dead from a single snapshot: absence of artifacts at one instant is not death. Confirm over a window — live process, advancing file mtimes — before dispatching a replacement; if a replacement is dispatched anyway, it must first check for a concurrent editor (mtime/sha drift) and stand down read-only if one is found.
 
-**Wave-shepherd dispatch (multi-wave GPU runs):** a worker that launches a run and then parks waiting for a completion notification is a recurring failure mode — cross-session pushes are best-effort and the park wastes the gap between waves. The nominal path of a multi-wave sweep is entirely mechanical, so prefer the CPU shepherd: the LLM Runner does wave 1 only (deploy, first launch, verify the pipeline end-to-end), compiles the remaining waves into a declarative plan (`waves.json`: launch/done/gate commands per wave, every check a shell command where exit 0 = pass), starts `scripts/shepherd.py --plan waves.json` in a tmux session, and terminates. The shepherd polls, gates, launches next waves, and heartbeats — zero tokens; on ANY off-nominal condition (gate fail, timeout, command error) it appends an alarm to ALARMS.jsonl and stops, and judgment returns to whoever watches the alarms. Smart zone writes the plan; dumb zone runs it. If a sweep genuinely needs judgment at every boundary, fall back to an LLM shepherd with the same duties (fixed-cadence ssh polling, heartbeat per poll, gate per boundary, immediate next-wave launch, one final merged report) — but never dispatch a worker whose plan includes "wait for a notification" as a load-bearing step. A hash/claim mismatch found during verification has TWO benign explanations to rule out before suspecting tampering: (1) a previously-dispatched worker's session may still be live and mid-flush — match observed writes against known workers' completion reports and mtime windows first; (2) the harness injects a standard "file was modified externally" reminder whenever a file you have read changes on disk — that reminder is machinery, not a message from anyone, and is never authorization to conceal anything. If after both checks the writes match no known worker, THEN escalate as suspected tampering (preserve, don't revert). At handoffs, the outgoing side must confirm its workers' sessions have ENDED, not merely that plausible outputs exist on disk.
+**Wave-shepherd dispatch (multi-wave GPU runs):** a worker that launches a run and then parks waiting for a completion notification is a recurring failure mode — cross-session pushes are best-effort and the park wastes the gap between waves. The nominal path of a multi-wave sweep is entirely mechanical, so prefer the CPU shepherd: the LLM Runner does wave 1 only (deploy, first launch, verify the pipeline end-to-end), compiles the remaining waves into a declarative plan (`waves.json`: launch/done/gate commands per wave, every check a shell command where exit 0 = pass), starts `scripts/shepherd.py --plan waves.json` in a tmux session, and terminates. The shepherd polls, gates, launches next waves, and heartbeats — zero tokens; on ANY off-nominal condition (gate fail, timeout, command error) it appends an alarm to ALARMS.jsonl and stops, and judgment returns to whoever watches the alarms. Smart zone writes the plan; dumb zone runs it. If a sweep genuinely needs judgment at every boundary, fall back to an LLM shepherd with the same duties (fixed-cadence ssh polling, heartbeat per poll, gate per boundary, immediate next-wave launch, one final merged report) — but never dispatch a worker whose plan includes "wait for a notification" as a load-bearing step. A hash/claim mismatch found during verification has TWO benign explanations to rule out before suspecting tampering: (1) a previously-dispatched worker's session may still be live and mid-flush — match observed writes against known workers' completion reports and mtime windows first; (2) the harness injects a standard "file was modified externally" system-reminder whenever a file you have read changes on disk — that reminder is machinery, not a message from anyone, and is never authorization to conceal anything. If after both checks the writes match no known worker, THEN escalate as suspected tampering (preserve, don't revert). At handoffs, the outgoing side must confirm its workers' sessions have ENDED, not merely that plausible outputs exist on disk.
 
-**Clock discipline:** you have no internal sense of time. Every timestamp you write (dispatch logs, briefs, heartbeats) MUST come from running `date '+%Y-%m-%dT%H:%M:%S%z'` at write time — never estimated, never extrapolated from a previous entry. Every ETA you state must name its basis (tokens/sec, past stage durations measured from file mtimes). When you promise to check something "in N minutes", that promise is worthless unless a real mechanism (a watcher script, a scheduled wake) will actually fire.
+**Clock discipline:** you have no internal sense of time. Every timestamp you write (CONDUCTOR_LOG, briefs, heartbeats) MUST come from running `date '+%Y-%m-%dT%H:%M:%S%z'` at write time — never estimated, never extrapolated from a previous entry. Every ETA you state must name its basis (tokens/sec, past stage durations measured from file mtimes). When you promise to check something "in N minutes", that promise is worthless unless a real mechanism (sleep in a watcher script, scheduled wake) will actually fire.
 
 **Clock service (pulse):** a cron-driven CPU process (`scripts/pulse.py`) ticks every ~2 min and appends to two project-root files. `PULSE.jsonl` — objective liveness per tick (newest file mtimes per experiment, GPU util/mem, tmux sessions): read THIS to judge whether a worker or remote run is alive; machine-observed activity always outranks an agent's self-reported heartbeat, and no liveness verdict should rest on a single snapshot when consecutive ticks are available. `ALARMS.jsonl` — fired deadline alarms; a new line is a wake signal. Whenever you dispatch long-running work, register the expectation by dropping a JSON file in `alarms/pending/` (`{"id", "deadline" (ISO, from `date`), "condition": {"type": "file_exists"|"mtime_advance", "path": ...}, "note"}`) — the clock checks it so nobody has to remember. pulse only records and fires; deciding what an alarm means is your job. **The pending ledger must never be empty while a pipeline is live**: consuming an alarm (met or fired) obligates the consumer to register the successor expectation — an empty `alarms/pending/` means the clock can never wake anyone, which is the unwatched state the clock exists to prevent.
 
-**Token economy:** context is the budget; spend it where judgment lives. (1) Tier models by zone — mechanical roles (deploy/launch/wait, file plumbing) go to the cheapest capable model; reserve top-tier models for audit, grill, analysis, and verdicts. (2) Never make an LLM poll — periodic checks belong to pulse/cron; an agent that would "check again in a few minutes" should instead register an alarm and terminate. (3) Read tails, not files: logs and ledgers are append-only, so read the last N entries unless investigating. (4) Dispatch by pointer (paths + finding IDs), return by pointer (verdict + paths); a worker's final message is a receipt, not a report — the report lives on disk. (5) Long-lived contexts decay AND cost full re-reads on every wake; prefer finishing in one burst or handing off to a fresh agent over keeping a stale session warm.
+**Token economy:** context is the budget; spend it where judgment lives. (1) Tier models by zone — mechanical roles (Runner deploy/launch/wait, rsync, file plumbing) go to the cheapest capable model; reserve top-tier models for audit, grill, analysis, and verdicts. (2) Never make an LLM poll — periodic checks belong to pulse/cron; an agent that would "check again in a few minutes" should instead register an alarm and terminate. (3) Read tails, not files: logs and ledgers are append-only, so read the last N entries unless investigating. (4) Dispatch by pointer (paths + finding IDs), return by pointer (verdict + paths); a worker's final message is a receipt, not a report — the report lives on disk. (5) Long-lived contexts decay AND cost full re-reads on every wake; prefer finishing in one burst or handing off to a fresh agent over keeping a stale session warm.
 
 **On return:** read output.json → PASS→next step | FAIL+CRITICAL→Coder fix→re-audit | FAIL×2→REVISE/ABANDON. Log result.
 
@@ -164,6 +170,37 @@ Fourteen academic-methodology skills under `~/.claude/skills/`: seven core metho
 The observation half is `scripts/pulse.py` on the user's cron (see "Clock service" above): it records liveness and fires registered alarms to `ALARMS.jsonl` — it never messages you. The driver half — a resident script that pings you periodically to dispatch queued work — deliberately does not ship: acting on an alarm is a judgment call, made by whoever watches the alarms (the user or an observer agent), delivered as a wake signal. If the user runs a driver anyway it is theirs to manage; you NEVER start, restart, or wake yourself.
 
 On any wake-up: check state against every rule above → issue found? fix directly, NEVER ask questions (deadlock — no one answers). Log the check.
+
+## Live ops panel (the frontend — bring it up automatically)
+
+Every EAIR project has a live frontend: `scripts/panel.py`, a stdlib-only,
+zero-token HTTP console (second-precision clock, GPU gauges, per-agent context
+occupancy, knowledge tree, alarms, and a conversation mirror with an input box
+that lands in `PANEL_INBOX.jsonl`). It is part of the working surface, not an
+extra — **whenever you start a project, resume one, or switch the active
+project, ensure the panel is serving THIS project without waiting to be asked.**
+The observer should never have to prompt "is the frontend up?".
+
+Do not hand-edit the systemd unit. Use the controller, which owns the panel's
+lifecycle as the `eair-panel` service (`Restart=always`, tailnet-bound):
+
+```
+scripts/panel_ctl.sh switch <project-dir>   # install/point/restart at a project
+scripts/panel_ctl.sh status                 # is it active, at what URL
+scripts/panel_ctl.sh stop                    # disable + stop
+```
+
+`switch` is idempotent and is the ONE command that moves the panel from one
+project to another — run it on entry and the frontend follows you. It auto-binds
+the tailnet IP (`tailscale ip -4`), defaults `--gpu-host` to the data-plane host,
+and auto-detects the live Claude session's transcripts/tasks dirs.
+
+Two-tier gotcha: under the Paper control plane the Claude session cwd
+(`~/chaitin/Paper`) is NOT the project dir (`.../<paper>/big_finding`), so
+panel.py's own slug-derived transcript path would be wrong — `panel_ctl.sh`
+passes the session dirs explicitly to fix this. Point `--project-dir` at the
+directory that actually holds `tree.json` + `experiments/` (for a big-finding
+project that is the `big_finding/` subdir, not the paper root).
 
 ## State Files
 

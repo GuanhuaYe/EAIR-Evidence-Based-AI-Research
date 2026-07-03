@@ -15,6 +15,14 @@ argument-hint: "<start|find|grill|status|paper> [args]"
 
 # /eair — entry point
 
+**You are the observer** (see `observer/SKILL.md`). `/eair` is how the
+observer is invoked. You talk to the user; you do NOT become the conductor
+and you do NOT dispatch workers yourself. Any subcommand that engages a
+project runs the observer startup checklist — start the clock, bring up the
+panel, then spawn the conductor as an unattended subagent — and from then
+on you relay the conductor's escalations and drop the user's direction
+changes as files at experiment boundaries.
+
 One command, five subcommands. Parse the user's argument line; if it
 doesn't match a subcommand, ask which one they meant and show the table:
 
@@ -53,11 +61,6 @@ doesn't match a subcommand, ask which one they meant and show the table:
      `<project>/escalations/<token>-reply.md`, where the conductor
      reads it at the next experiment boundary. Human decisions arrive
      as files, never as chat.
-   - **Live panel**: offer to run `conductor/scripts/panel.py` as a
-     service (systemd or nohup). The one real question is the bind
-     address: a tailnet/VPN IP if the user has one, else `127.0.0.1`
-     + SSH tunnel. Never bind a public interface — the bind address is
-     the only access control.
    - **Git**: use git for backup and rollback? If yes: init the project
      repo, commit at every experiment boundary (post-verdict), tag
      decision points so any experiment state can be recovered.
@@ -79,33 +82,39 @@ doesn't match a subcommand, ask which one they meant and show the table:
      EVOLUTION.md        # ledger header + comparability rules + empty veto list
      CONDUCTOR_LOG.json    # {"entries": []}
      HEARTBEAT.jsonl     # empty
-     alarms/pending/     # deadline ledger read by the clock
      experiments/
    ```
-   Then start the clock — not a question, part of the scaffold:
-   ```
-   */2 * * * * python3 <skills>/conductor/scripts/pulse.py --project-dir <project> [--gpu-host <alias>]
-   ```
-   goes into the user's crontab (mention it in the scaffold summary; skip
-   only if `EAIR_NO_PULSE=1`). pulse is the system's only time authority:
-   it records observed liveness to `PULSE.jsonl` and fires registered
-   deadline alarms to `ALARMS.jsonl`. Every timestamp anywhere in the
-   project traces to a machine clock, never to a model's guess.
 3. Fill an autonomy contract with the user (see
    `research-autonomy-contract` skill) so unattended stretches have
    defined escalation rules.
-4. Hand control to the conductor protocol: read `conductor/SKILL.md` and run
-   Stage 1 (idea triage via `idea-evaluator`, kill-cheap first), then the
-   mandatory experiment chain. Every experiment goes through `big-finding`
-   bundle rules — no single-arm runs, verdict rules preregistered.
+4. Run the observer startup checklist (see `observer/SKILL.md`) — you are
+   the observer, not the conductor:
+   a. **Start the clock**: install `conductor/scripts/pulse.py` on cron
+      (every 2 min) for the project so time is machine-anchored, not
+      LLM-guessed; confirm it writes `PULSE.jsonl`.
+   b. **Bring up the panel**: `conductor/scripts/panel_ctl.sh switch
+      <project-dir>`, then report the tailnet URL.
+   c. **Spawn the conductor** as an unattended background subagent whose
+      context is sterile (protocol + disk state only): its prompt tells it
+      to read `conductor/SKILL.md` and run Stage 1 (idea triage via
+      `idea-evaluator`, kill-cheap first), then the mandatory experiment
+      chain. Every experiment goes through `big-finding` bundle rules — no
+      single-arm runs, verdict rules preregistered. You do NOT become the
+      conductor; you relay its escalations to the user and drop direction
+      changes as files at experiment boundaries.
 
 ## /eair find <question>
 
-Skip venue concerns. Read `big-finding/SKILL.md` and execute the loop
-directly: formulate the falsifiable hypothesis, preregister the decision
-rule, design the bundle, dispatch one fresh agent per experiment, apply
-the verdict mechanically, update the tree. Report PROVEN / REFUTED /
-INSUFFICIENT / CONFOUNDED with the numbers, not a narrative.
+Skip venue concerns. Run the observer checklist (clock, panel, conductor),
+then the spawned conductor drives the `big-finding/SKILL.md` loop:
+formulate the falsifiable hypothesis, preregister the decision rule, design
+the bundle, dispatch one fresh worker per experiment, apply the verdict
+mechanically, update the tree. As observer you relay each verdict to the
+user — PROVEN / REFUTED / INSUFFICIENT / CONFOUNDED with the numbers, not a
+narrative — and pass new questions to the conductor as files. (For a quick
+one-off hypothesis with no running pipeline, you may drive the loop
+inline; but anything long-running or unattended goes through the
+conductor subagent so your context stays the observer's.)
 
 ## /eair grill <doc>
 
@@ -123,11 +132,13 @@ not write anything.
 
 ## /eair paper
 
-Requires a project with at least one audited, tree-recorded result.
-Run the paper layer in order: `tech-paper-template` (claim graph) →
-`intro-drafter` → Writer agent per section → `citation-verifier` →
-`figure-designer` / `figure-coder` → `pre-submission-reviewer` →
-`reviewer-panel`. Producer and reviewer are different model families.
+Requires a project with at least one audited, tree-recorded result. Run
+the observer checklist, then the spawned conductor drives the paper layer
+in order: `tech-paper-template` (claim graph) → `intro-drafter` → Writer
+worker per section → `citation-verifier` → `figure-designer` /
+`figure-coder` → `pre-submission-reviewer` → `reviewer-panel`. Producer and
+reviewer are different model families. As observer you relay gate outcomes
+to the user; you do not draft sections yourself.
 If the project has no audited results, say so and point to `/eair find`.
 
 ## Rules that apply to every subcommand
@@ -135,6 +146,13 @@ If the project has no audited results, say so and point to `/eair find`.
 - The individual skills are also directly invocable (`/big-finding`,
   `/grill-doc`, `/idea-evaluator`, ...); this command is a router, not a
   replacement.
+- **Every subcommand that engages a project (`start`, `find`, `paper`, or
+  resuming/switching work) runs the observer startup checklist** (see
+  `observer/SKILL.md`): start the clock (`pulse.py` cron), bring up the
+  panel (`panel_ctl.sh switch <project-dir>`, report the URL), then spawn
+  the conductor as an unattended subagent. The clock and frontend follow
+  the active project automatically; the observer never has to be asked "is
+  the clock/frontend up?". `status` is read-only and may skip the checklist.
 - Follow the supervision topology (README, "How it's organized"): fresh agent per experiment, structured files between layers,
   unaudited numbers never enter `EVOLUTION.md`.
 - When a subcommand needs a long-running unattended conductor, offer it

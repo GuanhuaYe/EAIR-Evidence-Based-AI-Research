@@ -43,6 +43,10 @@ def main():
     ap.add_argument("--ticks", type=int, default=240)
     a = ap.parse_args()
     P = os.path.expanduser(a.project_dir)
+    _pp = os.path.abspath(P).rstrip("/")
+    proj = os.path.basename(_pp)
+    if proj in ("big_finding", "experiments", "big-finding"):
+        proj = os.path.basename(os.path.dirname(_pp)) or proj
 
     ticks = jsonl(os.path.join(P, "PULSE.jsonl"), a.ticks)
     last = ticks[-1] if ticks else {}
@@ -161,7 +165,7 @@ def main():
     <div class="vital"><span class="lbl">server0 load/mem/disk</span><span class="mono">{esc(last.get('load1','–'))} · {esc(last.get('mem_avail_gb','–'))}G · {esc(last.get('disk_pct','–'))}%</span></div>
     <div class="vital"><span class="lbl">server-3 disk</span><span class="mono">{esc(last.get('remote_disk_pct','–'))}%</span></div>"""
 
-    doc = f"""<title>EAIR ops — pmj-idea</title>
+    doc = f"""<title>EAIR ops — {esc(proj)}</title>
 <style>
   :root {{
     --bg:#131a21; --panel:#1b232d; --panel2:#202a35; --line:#2b3642;
@@ -226,7 +230,7 @@ def main():
          vertical-align:-1px; }}
 </style>
 <header>
-  <h1>EAIR ops · <span class="proj">pmj-idea</span> · geometry_budget_repair</h1>
+  <h1>EAIR ops · <span class="proj">{esc(proj)}</span></h1>
   <span class="mono">generated {esc(last.get('ts','?'))}</span>
 </header>
 

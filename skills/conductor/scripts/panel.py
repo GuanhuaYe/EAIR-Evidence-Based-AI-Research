@@ -125,6 +125,39 @@ def conversation(transcripts_dir, limit=14):
     return msgs[-limit:], ({"occupancy": occ, "window": win} if occ else None)
 
 
+def conductor_card(transcripts_dir):
+    """The conductor = the main conversation (newest transcript). Its context
+    occupancy, model, and latest action — the orchestrator's own vitals, shown
+    separately from the worker subagents it dispatches."""
+    files = sorted(glob.glob(os.path.join(transcripts_dir, "*.jsonl")),
+                   key=os.path.getmtime)
+    if not files:
+        return None
+    path = files[-1]
+    recs = tail_jsonl(path, max_bytes=524288)
+    if not recs:
+        return None
+    occ, win, model = last_usage(recs)
+    activity, tool = "", ""
+    for r in reversed(recs):
+        m = r.get("message") or {}
+        if not (m.get("role") == "assistant" or r.get("type") == "assistant"):
+            continue
+        for b in (m.get("content") or []):
+            if isinstance(b, dict) and b.get("type") == "tool_use" and not tool:
+                tool = b.get("name", "")
+        if not activity:
+            t = text_of(m or r).strip()
+            if t:
+                activity = t[:400].replace("\n", " ")
+        if activity:
+            break
+    st = os.stat(path)
+    return {"occupancy": occ, "window": win, "model": model.split("/")[-1],
+            "activity": activity, "last_tool": tool, "mtime": int(st.st_mtime),
+            "live": (time.time() - st.st_mtime) < 300}
+
+
 def gpu_sampler():
     while True:
         if ARGS.gpu_host:
@@ -153,6 +186,17 @@ def gpu_sampler():
             except Exception:
                 GPU.update({"ok": False, "sampled_at": int(time.time())})
         time.sleep(12)
+
+
+def project_label(path):
+    """Human name for the served project — basename, but climb past generic
+    subdirs (big_finding/experiments) so a big-finding project shows the paper
+    name, not 'big_finding'."""
+    p = os.path.abspath(path).rstrip("/")
+    base = os.path.basename(p)
+    if base in ("big_finding", "experiments", "big-finding"):
+        base = os.path.basename(os.path.dirname(p)) or base
+    return base
 
 
 def build_state():
@@ -194,6 +238,10 @@ def build_state():
                 agents.append(c)
     agents.sort(key=lambda c: -c["mtime"])
     convo, obs_ctx = conversation(ARGS.transcripts)
+    cond = conductor_card(ARGS.transcripts)
+    if cond:
+        cond["workers_live"] = sum(1 for a in agents if a.get("live"))
+        cond["workers_total"] = len(agents)
     du = shutil.disk_usage(P)
     mem = {}
     try:
@@ -202,10 +250,12 @@ def build_state():
         pass
     return {
         "epoch": time.time(),
+        "project": project_label(P),
         "host": {"load1": float(open("/proc/loadavg").read().split()[0]),
                  "mem_avail_gb": round(int(mem.get("MemAvailable", "0 kB").split()[0]) / 1048576, 1),
                  "disk_pct": round(du.used / du.total * 100)},
         "gpu": GPU, "agents": agents[:10],
+        "conductor": cond,
         "observer": {"messages": convo, "context": obs_ctx},
         "hypotheses": [{"id": k, "status": v.get("status"),
                         "short": (v.get("short") or "")[:110]}
@@ -227,14 +277,21 @@ PAGE = r"""<!doctype html><html><head><meta charset="utf-8">
 *{box-sizing:border-box}html{background:var(--bg)}
 body{color:var(--ink);font:14px/1.5 system-ui,sans-serif;max-width:1150px;margin:0 auto;padding:18px 16px 50px}
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;font-size:12.5px}
-header{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px}
+header{position:sticky;top:0;z-index:6;background:var(--bg);border-bottom:1px solid var(--line);padding:6px 0 9px;margin-bottom:14px}
+.hrow{display:flex;justify-content:space-between;align-items:baseline}
 h1{font-size:15px;margin:0;letter-spacing:.4px}h1 span{color:var(--acc)}
 #clock{font-size:16px;color:var(--acc)}
+#ctxbar{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:11.5px}
+#ctxbar .lbl2{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);white-space:nowrap}
+#ctxbar .bar{flex:1;height:8px}#ctxbar .bar i{height:8px}
 .mod{background:var(--panel);border:1px solid var(--line);border-radius:5px;margin-bottom:12px}
 .mod-h{display:flex;justify-content:space-between;padding:7px 12px;border-bottom:1px solid var(--line);
 cursor:grab;user-select:none;font-size:10.5px;text-transform:uppercase;letter-spacing:.13em;color:var(--dim)}
 .mod-b{padding:10px 12px;overflow-y:auto;overflow-x:hidden;resize:vertical;min-height:60px;height:240px}
-#talk{height:430px}#now{height:300px}#log{height:260px}
+#talk{height:430px}#now{height:300px}#log{height:260px}#obself{height:180px}#agents{height:300px}
+.condhead{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:9px}
+.condctx{display:flex;align-items:center;gap:10px}
+.cond .msg{margin-top:8px}
 .mod-b::-webkit-scrollbar{width:9px}.mod-b::-webkit-scrollbar-track{background:var(--panel)}
 .mod-b::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
 .mod-b::-webkit-scrollbar-thumb:hover{background:var(--dim)}
@@ -265,13 +322,17 @@ table{border-collapse:collapse;width:100%}td{padding:4px 10px 4px 0;border-botto
 .bar.wide{min-width:60px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style></head><body>
-<header><h1>EAIR live · <span>pmj-idea</span></h1><div id="clock" class="mono">--:--:--</div></header>
+<header>
+ <div class="hrow"><h1>EAIR live · <span id="proj">—</span></h1><div id="clock" class="mono">--:--:--</div></div>
+ <div id="ctxbar"><span class="lbl2">observer ctx</span><div class="bar"><i></i></div><span id="ctxnum" class="mono dim">–</span></div>
+</header>
 <div id="mods"></div>
 <script>
 const MODS=[
  {id:'talk',title:'observer — conversation'},
+ {id:'obself',title:'observer — activity'},
  {id:'now',title:'now — host & gpu'},
- {id:'agents',title:'agents — context & activity'},
+ {id:'agents',title:'agents — conductor + workers (dispatched subagents)'},
  {id:'hyp',title:'knowledge tree'},
  {id:'exp',title:'experiments'},
  {id:'alarms',title:'clock — alarms'},
@@ -315,6 +376,7 @@ function bar(occ,win){if(occ==null)return'<span class="dim">–</span>';
 async function poll(){try{
  const s=await(await fetch('/api/state')).json();
  off=s.epoch*1000-Date.now();
+ if(s.project){const pj=document.getElementById('proj');if(pj)pj.textContent=s.project;document.title='EAIR live · '+s.project;}
  const g=s.gpu.gpus||[];
  const hist0=(s.gpu.hist||[]).length;
  const ring=(pct,color)=>{const C=2*Math.PI*26,d=C*Math.min(100,pct)/100;
@@ -352,10 +414,21 @@ async function poll(){try{
   ['#7fb4c9','#d1a04a'].forEach((col,gi)=>{c2.strokeStyle=col;c2.lineWidth=1.4;c2.beginPath();
    hist.forEach((h,i)=>{const x=i*W2/(hist.length-1),y=H2-4-(H2-8)*(h.u[gi]||0)/100;
     i?c2.lineTo(x,y):c2.moveTo(x,y);});c2.stroke();});}
- const oc=s.observer.context;
- put('talkmsgs',
-  (oc?`<div class="small dim">observer context ${bar(oc.occupancy,oc.window)}</div>`:'')+
-  s.observer.messages.map(m=>`<div class="msg ${m.role}">${esc(m.text)}</div>`).join(''));
+ const cd=s.conductor;
+ (function(){const b=document.querySelector('#ctxbar .bar i');const n=document.getElementById('ctxnum');
+  if(!cd||cd.occupancy==null){if(n)n.textContent='–';if(b)b.style.width='0';return;}
+  const p=cd.window?Math.min(100,cd.occupancy/cd.window*100):0;
+  if(b){b.style.width=p.toFixed(0)+'%';b.className=p>75?'hot':p>50?'mid':'';}
+  if(n)n.textContent=`${(cd.occupancy/1000).toFixed(0)}k / ${(cd.window/1000).toFixed(0)}k · ${p.toFixed(0)}%`;})();
+ put('talkmsgs',s.observer.messages.map(m=>`<div class="msg ${m.role}">${esc(m.text)}</div>`).join(''));
+ put('obself', cd ? `<div class="cond">
+   <div class="condhead">${cd.live?chip('live','good'):chip('idle','warn')}
+    <span class="chip acc">${esc(cd.model||'?')}</span>
+    ${cd.last_tool?`<span class="chip acc">▶ ${esc(cd.last_tool)}</span>`:''}
+    <span class="dim small">dispatching ${cd.workers_live||0} live · ${cd.workers_total||0} total subagents</span></div>
+   <div class="condctx"><span class="lbl">ctx</span>${bar(cd.occupancy,cd.window)}</div>
+   <div class="msg assistant small">${esc(cd.activity||'—')}</div>
+  </div>` : '<div class="dim small">no observer transcript found</div>');
  put('agents','<table>'+s.agents.map(a=>
   `<tr><td>${a.live?chip('live','good'):chip('idle','warn')}</td>
    <td class="mono">${esc(a.model||'?')}</td><td>${bar(a.occupancy,a.window)}</td>
