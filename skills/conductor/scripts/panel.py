@@ -274,7 +274,6 @@ root.addEventListener('dragend',()=>{if(dragEl)dragEl.classList.remove('drag');d
 root.addEventListener('dragover',e=>{e.preventDefault();const t=e.target.closest('.mod');
  if(!t||t===dragEl)return;const r=t.getBoundingClientRect();
  root.insertBefore(dragEl,(e.clientY-r.top)>r.height/2?t.nextSibling:t);});
-new MutationObserver(()=>{}).observe(root,{});
 document.addEventListener('mouseup',()=>{const h={};document.querySelectorAll('.mod-b').forEach(b=>{if(b.style.height)h[b.id]=parseInt(b.style.height)});localStorage.setItem('hts',JSON.stringify(h));});
 let off=0;
 function tick(){const d=new Date(Date.now()+off);
