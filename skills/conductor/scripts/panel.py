@@ -80,17 +80,44 @@ def last_usage(records):
     return None, None, ""
 
 
+_LABEL_CACHE = {}                # path -> label (first user text never changes)
+
+
+def head_label(path):
+    """First user text from the file HEAD — long transcripts outgrow the tail
+    window and would otherwise lose their label."""
+    if path in _LABEL_CACHE:
+        return _LABEL_CACHE[path]
+    label = ""
+    try:
+        with open(path, "rb") as f:
+            for line in f.read(131072).decode("utf-8", "replace").splitlines():
+                try:
+                    r = json.loads(line)
+                except Exception:
+                    continue
+                if not isinstance(r, dict):
+                    continue
+                if r.get("type") == "user" or (r.get("message") or {}).get("role") == "user":
+                    label = text_of(r.get("message") or r)[:90].replace("\n", " ")
+                    if label:
+                        break
+    except OSError:
+        pass
+    if label:                                         # only cache a found label
+        _LABEL_CACHE[path] = label
+        if len(_LABEL_CACHE) > 128:
+            _LABEL_CACHE.pop(next(iter(_LABEL_CACHE)))
+    return label
+
+
 def agent_card(path):
     recs = tail_jsonl(path)
     if not recs:
         return None
     occ, win, model = last_usage(recs)
-    label, activity = "", ""
-    for r in recs:                                    # first user text = task label
-        if r.get("type") == "user" or (r.get("message") or {}).get("role") == "user":
-            label = text_of(r.get("message") or r)[:90].replace("\n", " ")
-            if label:
-                break
+    activity = ""
+    label = head_label(path)
     for r in reversed(recs):                          # newest assistant text = activity
         m = r.get("message") or {}
         if m.get("role") == "assistant" or r.get("type") == "assistant":
@@ -105,12 +132,8 @@ def agent_card(path):
             "live": (time.time() - st.st_mtime) < 300}
 
 
-def conversation(transcripts_dir, limit=14):
-    files = sorted(glob.glob(os.path.join(transcripts_dir, "*.jsonl")),
-                   key=os.path.getmtime)
-    if not files:
-        return [], None
-    recs = tail_jsonl(files[-1], max_bytes=524288)
+def messages_of(recs, limit=14):
+    """User/assistant text messages from parsed transcript records."""
     msgs = []
     for r in recs:
         m = r.get("message") or {}
@@ -121,14 +144,24 @@ def conversation(transcripts_dir, limit=14):
         if not t or t.startswith("<") and "system-reminder" in t[:40]:
             continue
         msgs.append({"role": role, "text": t[:600], "ts": r.get("timestamp", "")})
+    return msgs[-limit:]
+
+
+def conversation(transcripts_dir, limit=14):
+    files = sorted(glob.glob(os.path.join(transcripts_dir, "*.jsonl")),
+                   key=os.path.getmtime)
+    if not files:
+        return [], None
+    recs = tail_jsonl(files[-1], max_bytes=524288)
+    msgs = messages_of(recs, limit)
     occ, win, _ = last_usage(recs)
-    return msgs[-limit:], ({"occupancy": occ, "window": win} if occ else None)
+    return msgs, ({"occupancy": occ, "window": win} if occ else None)
 
 
-def conductor_card(transcripts_dir):
-    """The conductor = the main conversation (newest transcript). Its context
-    occupancy, model, and latest action — the orchestrator's own vitals, shown
-    separately from the worker subagents it dispatches."""
+def self_card(transcripts_dir):
+    """The OBSERVER = the main conversation (newest transcript). Its context
+    occupancy, model, and latest action — the user-facing layer's own vitals.
+    (The conductor is a dispatched subagent, found in the tasks dir.)"""
     files = sorted(glob.glob(os.path.join(transcripts_dir, "*.jsonl")),
                    key=os.path.getmtime)
     if not files:
@@ -230,15 +263,28 @@ def build_state():
                                "note": (a.get("note") or "")[:140]})
             except Exception:
                 pass
-    agents = []
+    agents, cond, cond_mtime = [], None, 0
     for f in glob.glob(os.path.join(ARGS.tasks_dir, "*", "tasks", "*.output")):
         if time.time() - os.path.getmtime(f) < 86400:
             c = agent_card(f)
-            if c:
+            if not c:
+                continue
+            # the conductor is a dispatched subagent whose task file opens
+            # with the conductor role prompt; newest one wins
+            if re.match(r"\s*you are the conductor\b", c.get("label") or "", re.I):
+                if c["mtime"] > cond_mtime:
+                    if cond:
+                        agents.append(cond)     # older conductor -> plain row
+                    cond, cond_mtime = c, c["mtime"]
+                    cond["messages"] = messages_of(
+                        tail_jsonl(f, max_bytes=4194304), limit=80)
+                else:
+                    agents.append(c)
+            else:
                 agents.append(c)
     agents.sort(key=lambda c: -c["mtime"])
     convo, obs_ctx = conversation(ARGS.transcripts)
-    cond = conductor_card(ARGS.transcripts)
+    obs = self_card(ARGS.transcripts)
     if cond:
         cond["workers_live"] = sum(1 for a in agents if a.get("live"))
         cond["workers_total"] = len(agents)
@@ -256,7 +302,7 @@ def build_state():
                  "disk_pct": round(du.used / du.total * 100)},
         "gpu": GPU, "agents": agents[:10],
         "conductor": cond,
-        "observer": {"messages": convo, "context": obs_ctx},
+        "observer": {"messages": convo, "context": obs_ctx, "card": obs},
         "hypotheses": [{"id": k, "status": v.get("status"),
                         "short": (v.get("short") or "")[:110]}
                        for k, v in (tree.get("nodes") or {}).items()],
@@ -331,8 +377,9 @@ table{border-collapse:collapse;width:100%}td{padding:4px 10px 4px 0;border-botto
 const MODS=[
  {id:'talk',title:'observer — conversation'},
  {id:'obself',title:'observer — activity'},
+ {id:'cond',title:'conductor — pipeline'},
  {id:'now',title:'now — host & gpu'},
- {id:'agents',title:'agents — conductor + workers (dispatched subagents)'},
+ {id:'agents',title:'workers — dispatched subagents'},
  {id:'hyp',title:'knowledge tree'},
  {id:'exp',title:'experiments'},
  {id:'alarms',title:'clock — alarms'},
@@ -367,7 +414,7 @@ function put(id,html){ if(_last[id]===html)return;               // diff: untouc
  const el=document.getElementById(id); if(!el)return;
  const atBottom=el.scrollHeight-el.scrollTop-el.clientHeight<60;
  const st=el.scrollTop; el.innerHTML=html; _last[id]=html;
- el.scrollTop=(id==='talkmsgs'&&atBottom)?el.scrollHeight:st; }  // chat sticks to bottom, others keep place
+ el.scrollTop=((id==='talkmsgs'||id==='cond')&&atBottom)?el.scrollHeight:st; }  // chat sticks to bottom, others keep place
 const chip=(t,c)=>`<span class="chip ${c}">${esc(t)}</span>`;
 const VC={REPLICATED:'good',PROVEN:'good',CONFIRMED:'good',INSUFFICIENT:'warn',CONFOUNDED:'warn',OPEN:'warn',FAIL:'crit',REFUTED:'crit',armed:'acc',fired:'crit',met:'good'};
 function bar(occ,win){if(occ==null)return'<span class="dim">–</span>';
@@ -414,21 +461,28 @@ async function poll(){try{
   ['#7fb4c9','#d1a04a'].forEach((col,gi)=>{c2.strokeStyle=col;c2.lineWidth=1.4;c2.beginPath();
    hist.forEach((h,i)=>{const x=i*W2/(hist.length-1),y=H2-4-(H2-8)*(h.u[gi]||0)/100;
     i?c2.lineTo(x,y):c2.moveTo(x,y);});c2.stroke();});}
- const cd=s.conductor;
+ const ob=s.observer.card;
  (function(){const b=document.querySelector('#ctxbar .bar i');const n=document.getElementById('ctxnum');
-  if(!cd||cd.occupancy==null){if(n)n.textContent='–';if(b)b.style.width='0';return;}
-  const p=cd.window?Math.min(100,cd.occupancy/cd.window*100):0;
+  if(!ob||ob.occupancy==null){if(n)n.textContent='–';if(b)b.style.width='0';return;}
+  const p=ob.window?Math.min(100,ob.occupancy/ob.window*100):0;
   if(b){b.style.width=p.toFixed(0)+'%';b.className=p>75?'hot':p>50?'mid':'';}
-  if(n)n.textContent=`${(cd.occupancy/1000).toFixed(0)}k / ${(cd.window/1000).toFixed(0)}k · ${p.toFixed(0)}%`;})();
+  if(n)n.textContent=`${(ob.occupancy/1000).toFixed(0)}k / ${(ob.window/1000).toFixed(0)}k · ${p.toFixed(0)}%`;})();
  put('talkmsgs',s.observer.messages.map(m=>`<div class="msg ${m.role}">${esc(m.text)}</div>`).join(''));
- put('obself', cd ? `<div class="cond">
+ put('obself', ob ? `<div class="cond">
+   <div class="condhead">${ob.live?chip('live','good'):chip('idle','warn')}
+    <span class="chip acc">${esc(ob.model||'?')}</span>
+    ${ob.last_tool?`<span class="chip acc">▶ ${esc(ob.last_tool)}</span>`:''}</div>
+   <div class="condctx"><span class="lbl">ctx</span>${bar(ob.occupancy,ob.window)}</div>
+   <div class="msg assistant small">${esc(ob.activity||'—')}</div>
+  </div>` : '<div class="dim small">no observer transcript found</div>');
+ const cd=s.conductor;
+ put('cond', cd ? `<div class="cond">
    <div class="condhead">${cd.live?chip('live','good'):chip('idle','warn')}
     <span class="chip acc">${esc(cd.model||'?')}</span>
-    ${cd.last_tool?`<span class="chip acc">▶ ${esc(cd.last_tool)}</span>`:''}
     <span class="dim small">dispatching ${cd.workers_live||0} live · ${cd.workers_total||0} total subagents</span></div>
    <div class="condctx"><span class="lbl">ctx</span>${bar(cd.occupancy,cd.window)}</div>
-   <div class="msg assistant small">${esc(cd.activity||'—')}</div>
-  </div>` : '<div class="dim small">no observer transcript found</div>');
+   ${(cd.messages||[]).map(m=>`<div class="msg ${m.role}">${esc(m.text)}</div>`).join('')}
+  </div>` : '<div class="dim small">no conductor dispatched</div>');
  put('agents','<table>'+s.agents.map(a=>
   `<tr><td>${a.live?chip('live','good'):chip('idle','warn')}</td>
    <td class="mono">${esc(a.model||'?')}</td><td>${bar(a.occupancy,a.window)}</td>
