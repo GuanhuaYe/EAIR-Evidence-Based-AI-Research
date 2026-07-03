@@ -53,6 +53,11 @@ doesn't match a subcommand, ask which one they meant and show the table:
      `<project>/escalations/<token>-reply.md`, where the conductor
      reads it at the next experiment boundary. Human decisions arrive
      as files, never as chat.
+   - **Live panel**: offer to run `conductor/scripts/panel.py` as a
+     service (systemd or nohup). The one real question is the bind
+     address: a tailnet/VPN IP if the user has one, else `127.0.0.1`
+     + SSH tunnel. Never bind a public interface — the bind address is
+     the only access control.
    - **Git**: use git for backup and rollback? If yes: init the project
      repo, commit at every experiment boundary (post-verdict), tag
      decision points so any experiment state can be recovered.

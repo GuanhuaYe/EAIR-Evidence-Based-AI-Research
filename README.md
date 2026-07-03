@@ -158,6 +158,23 @@ and fires but never decides; the agents decide but never estimate time.
 It also saves tokens — a cron tick is free, so no LLM ever burns a
 context re-read just to poll.
 
+### Watch it live
+
+`conductor/scripts/panel.py` serves a single-page console (stdlib only,
+zero tokens): a second-precision clock, GPU ring gauges with VRAM/power
+meters and a utilization history line, per-agent context occupancy parsed
+from transcript tails, each agent's latest output, the knowledge tree,
+alarms, and the progress log — polled every 3 s. The top module mirrors
+your conversation with the observer and includes an input box; messages
+land in `PANEL_INBOX.jsonl`, which the observer tails. Modules drag to
+reorder and resize; layout persists in the browser. Bind it to a private
+interface — a tailnet address or `127.0.0.1` behind an SSH tunnel — never
+a public one; the bind address is the only access control:
+
+```
+panel.py --project-dir <project> --bind <tailnet-ip> --port 8377 [--gpu-host <alias>]
+```
+
 ### Language
 
 The observer speaks your language (it's the first setup question, and it
