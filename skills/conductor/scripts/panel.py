@@ -133,7 +133,8 @@ def gpu_sampler():
                     ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6",
                      ARGS.gpu_host,
                      "nvidia-smi --query-gpu=utilization.gpu,memory.used,"
-                     "power.draw,temperature.gpu --format=csv,noheader,nounits;"
+                     "memory.total,power.draw,power.limit,temperature.gpu"
+                     " --format=csv,noheader,nounits;"
                      "echo ---; tmux ls 2>/dev/null|cut -d: -f1"],
                     capture_output=True, text=True, timeout=10)
                 gp, _, tm = out.stdout.partition("---")
@@ -141,9 +142,14 @@ def gpu_sampler():
                 for ln in gp.strip().splitlines():
                     f = [x.strip() for x in ln.split(",")]
                     gpus.append({"util": int(f[0]), "mem": int(f[1]),
-                                 "w": float(f[2]), "t": int(f[3])})
+                                 "mem_total": int(f[2]), "w": float(f[3]),
+                                 "w_cap": float(f[4]), "t": int(f[5])})
+                hist = GPU.get("hist") or []
+                hist.append({"t": int(time.time()),
+                             "u": [g["util"] for g in gpus]})
                 GPU.update({"gpus": gpus, "tmux": tm.strip().splitlines(),
-                            "sampled_at": int(time.time()), "ok": True})
+                            "sampled_at": int(time.time()), "ok": True,
+                            "hist": hist[-240:]})
             except Exception:
                 GPU.update({"ok": False, "sampled_at": int(time.time())})
         time.sleep(12)
@@ -244,7 +250,14 @@ table{border-collapse:collapse;width:100%}td{padding:4px 10px 4px 0;border-botto
 #say button{background:#213038;color:var(--acc);border:1px solid var(--acc);border-radius:4px;padding:7px 14px;cursor:pointer;font:inherit}
 #say button:hover{background:#2a3d47}
 .vitals{display:flex;gap:18px;flex-wrap:wrap}
-.vitals div{display:flex;flex-direction:column}.vitals .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim)}
+.lbl{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim)}
+.gpugrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.gpucard{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.gpuhead{display:flex;justify-content:space-between;align-items:baseline}
+.gpumain{display:flex;gap:12px;align-items:center;margin-top:6px}
+.gpumeters{flex:1;display:flex;flex-direction:column;gap:8px}
+.meter{display:grid;grid-template-columns:52px 1fr auto;gap:8px;align-items:center}
+.bar.wide{min-width:60px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style></head><body>
 <header><h1>EAIR live · <span>pmj-idea</span></h1><div id="clock" class="mono">--:--:--</div></header>
@@ -289,11 +302,41 @@ async function poll(){try{
  const s=await(await fetch('/api/state')).json();
  off=s.epoch*1000-Date.now();
  const g=s.gpu.gpus||[];
- document.getElementById('now').innerHTML=`<div class="vitals">
-  <div><span class="lbl">server0</span><span class="mono">load ${s.host.load1} · ${s.host.mem_avail_gb}G free · disk ${s.host.disk_pct}%</span></div>
-  ${g.map((x,i)=>`<div><span class="lbl">GPU${i}</span><span class="mono">${x.util}% · ${(x.mem/1024).toFixed(1)}G · ${x.w}W · ${x.t}°C</span></div>`).join('')}
-  <div><span class="lbl">tmux</span><span class="mono">${esc((s.gpu.tmux||[]).join(', ')||'none')}</span></div>
-  <div><span class="lbl">gpu sampled</span><span class="mono">${s.gpu.sampled_at?Math.round(s.epoch-s.gpu.sampled_at)+'s ago':'–'}</span></div></div>`;
+ const ring=(pct,color)=>{const C=2*Math.PI*26,d=C*Math.min(100,pct)/100;
+  return`<svg width="72" height="72" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="var(--panel2)" stroke-width="7"/>
+   <circle cx="32" cy="32" r="26" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round"
+    stroke-dasharray="${d} ${C-d}" transform="rotate(-90 32 32)"/>
+   <text x="32" y="37" text-anchor="middle" fill="var(--ink)" font-size="15" font-family="ui-monospace,Menlo,monospace">${pct}</text></svg>`;};
+ const meter=(lbl,val,max,unit,warn,crit)=>{const p=Math.min(100,val/max*100);
+  const c=p>crit?'var(--crit)':p>warn?'var(--warn)':'var(--acc)';
+  return`<div class="meter"><span class="lbl">${lbl}</span>
+   <div class="bar wide"><i style="width:${p.toFixed(0)}%;background:${c}"></i></div>
+   <span class="mono dim">${val}${unit}</span></div>`;};
+ const tempChip=t=>`<span class="chip ${t>=80?'crit':t>=65?'warn':'good'}">${t}°C</span>`;
+ const utilColor=u=>u>85?'var(--good)':u>5?'var(--warn)':'var(--dim)';
+ document.getElementById('now').innerHTML=
+  `<div class="gpugrid">${g.map((x,i)=>`<div class="gpucard">
+     <div class="gpuhead"><span class="lbl">GPU${i} · util%</span>${tempChip(x.t)}</div>
+     <div class="gpumain">${ring(x.util,utilColor(x.util))}
+      <div class="gpumeters">
+       ${meter('vram',(x.mem/1024).toFixed(1),(x.mem_total||49140)/1024,'G',75,92)}
+       ${meter('power',Math.round(x.w),x.w_cap||200,'W',80,95)}
+      </div></div></div>`).join('')}
+   <div class="gpucard">
+     <div class="gpuhead"><span class="lbl">server0</span><span class="mono dim">load ${s.host.load1}</span></div>
+     <div class="gpumeters" style="margin-top:8px">
+      ${meter('disk',s.host.disk_pct,100,'%',80,90)}
+      ${meter('ram free',s.host.mem_avail_gb,8,'G',999,999)}
+     </div>
+     <div class="small dim" style="margin-top:6px">tmux: ${esc((s.gpu.tmux||[]).join(', ')||'none')} · gpu ${s.gpu.sampled_at?Math.round(s.epoch-s.gpu.sampled_at)+'s ago':'–'}</div>
+   </div></div>
+   <canvas id="ghist" height="46" style="width:100%;margin-top:10px"></canvas>`;
+ const hist=s.gpu.hist||[];const hc=document.getElementById('ghist');
+ if(hc&&hist.length>1){hc.width=hc.clientWidth;const c2=hc.getContext('2d');
+  const W2=hc.width,H2=hc.height;
+  ['#7fb4c9','#d1a04a'].forEach((col,gi)=>{c2.strokeStyle=col;c2.lineWidth=1.4;c2.beginPath();
+   hist.forEach((h,i)=>{const x=i*W2/(hist.length-1),y=H2-4-(H2-8)*(h.u[gi]||0)/100;
+    i?c2.lineTo(x,y):c2.moveTo(x,y);});c2.stroke();});}
  const oc=s.observer.context;
  document.getElementById('talk').innerHTML=
   (oc?`<div class="small dim">observer context ${bar(oc.occupancy,oc.window)}</div>`:'')+
