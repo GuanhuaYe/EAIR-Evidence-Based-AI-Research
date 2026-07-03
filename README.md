@@ -160,7 +160,8 @@ context re-read just to poll.
 
 ### Watch it live
 
-<img width="967" height="1005" alt="50f51756768dccc76f695bcce7237084" src="https://github.com/user-attachments/assets/7e0f5254-aece-4607-8b21-514be25a54e7" />
+<img width="1139" height="1150" alt="image" src="https://github.com/user-attachments/assets/b84290b2-7333-4b9a-9571-21d32979b150" />
+
 
 
 `conductor/scripts/panel.py` serves a single-page console (stdlib only,
