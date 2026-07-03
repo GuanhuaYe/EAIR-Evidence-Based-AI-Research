@@ -198,22 +198,55 @@ def gpu_sampler():
                 out = subprocess.run(
                     ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6",
                      ARGS.gpu_host,
-                     "nvidia-smi --query-gpu=utilization.gpu,memory.used,"
+                     "nvidia-smi --query-gpu=name,utilization.gpu,memory.used,"
                      "memory.total,power.draw,power.limit,temperature.gpu"
                      " --format=csv,noheader,nounits;"
-                     "echo ---; tmux ls 2>/dev/null|cut -d: -f1"],
+                     "echo @@@;"
+                     "nvidia-smi --query-gpu=index,uuid --format=csv,noheader;"
+                     "echo @@@;"
+                     "nvidia-smi --query-compute-apps=gpu_uuid,pid,used_memory"
+                     " --format=csv,noheader,nounits;"
+                     "echo @@@;"
+                     "for p in $(nvidia-smi --query-compute-apps=pid"
+                     " --format=csv,noheader); do"
+                     " ps -o pid=,user=,etime=,args= -p $p 2>/dev/null; done;"
+                     "echo @@@; tmux ls 2>/dev/null|cut -d: -f1"],
                     capture_output=True, text=True, timeout=10)
-                gp, _, tm = out.stdout.partition("---")
+                gp, uu, ap, pp, tm = (out.stdout.split("@@@") + [""] * 5)[:5]
                 gpus = []
                 for ln in gp.strip().splitlines():
                     f = [x.strip() for x in ln.split(",")]
-                    gpus.append({"util": int(f[0]), "mem": int(f[1]),
-                                 "mem_total": int(f[2]), "w": float(f[3]),
-                                 "w_cap": float(f[4]), "t": int(f[5])})
+                    gpus.append({"name": f[0].replace("NVIDIA ", ""),
+                                 "util": int(f[1]), "mem": int(f[2]),
+                                 "mem_total": int(f[3]), "w": float(f[4]),
+                                 "w_cap": float(f[5]), "t": int(f[6])})
+                uuid2idx = {}
+                for ln in uu.strip().splitlines():
+                    f = [x.strip() for x in ln.split(",")]
+                    if len(f) == 2:
+                        uuid2idx[f[1]] = int(f[0])
+                pid2ps = {}
+                for ln in pp.strip().splitlines():
+                    f = ln.split(None, 3)
+                    if len(f) >= 3:
+                        pid2ps[f[0]] = {"user": f[1], "time": f[2],
+                                        "cmd": (f[3] if len(f) > 3 else "")[-80:]}
+                procs = []
+                for ln in ap.strip().splitlines():
+                    f = [x.strip() for x in ln.split(",")]
+                    if len(f) >= 3 and f[0] in uuid2idx:
+                        ps = pid2ps.get(f[1], {})
+                        procs.append({"gpu": uuid2idx[f[0]], "pid": f[1],
+                                      "mem": int(f[2]) if f[2].isdigit() else 0,
+                                      "user": ps.get("user", "?"),
+                                      "time": ps.get("time", ""),
+                                      "cmd": ps.get("cmd", "")})
+                procs.sort(key=lambda p: (p["gpu"], -p["mem"]))
                 hist = GPU.get("hist") or []
                 hist.append({"t": int(time.time()),
                              "u": [g["util"] for g in gpus]})
-                GPU.update({"gpus": gpus, "tmux": tm.strip().splitlines(),
+                GPU.update({"gpus": gpus, "procs": procs,
+                            "tmux": tm.strip().splitlines(),
                             "sampled_at": int(time.time()), "ok": True,
                             "hist": hist[-240:]})
             except Exception:
@@ -300,7 +333,7 @@ def build_state():
         "host": {"load1": float(open("/proc/loadavg").read().split()[0]),
                  "mem_avail_gb": round(int(mem.get("MemAvailable", "0 kB").split()[0]) / 1048576, 1),
                  "disk_pct": round(du.used / du.total * 100)},
-        "gpu": GPU, "agents": agents[:10],
+        "gpu": GPU, "gpu_host": ARGS.gpu_host, "agents": agents[:10],
         "conductor": cond,
         "observer": {"messages": convo, "context": obs_ctx, "card": obs},
         "hypotheses": [{"id": k, "status": v.get("status"),
@@ -353,13 +386,23 @@ table{border-collapse:collapse;width:100%}td{padding:4px 10px 4px 0;border-botto
 .bar i.hot{background:var(--crit)}.bar i.mid{background:var(--warn)}
 .msg{margin:6px 0;padding:7px 10px;border-radius:5px;max-width:88%;white-space:pre-wrap;font-size:13px}
 .msg.user{background:#213038;margin-left:auto}.msg.assistant{background:var(--panel2)}
-#say{display:flex;gap:8px;margin-top:8px}
+#talk{display:flex;flex-direction:column;overflow:hidden}
+#obshead{flex:none;display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+#obshead .bar{flex:1;min-width:70px}
+#talkmsgs{flex:1;overflow-y:auto;min-height:0;scrollbar-width:thin;scrollbar-color:var(--line) var(--panel)}
+#say{flex:none;display:flex;gap:8px;margin-top:8px}
 #say input{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:4px;color:var(--ink);padding:7px 10px;font:inherit}
 #say button{background:#213038;color:var(--acc);border:1px solid var(--acc);border-radius:4px;padding:7px 14px;cursor:pointer;font:inherit}
 #say button:hover{background:#2a3d47}
 .vitals{display:flex;gap:18px;flex-wrap:wrap}
 .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim)}
-.gpugrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.nvrow{display:grid;grid-template-columns:38px 108px 40px 76px 30px 1fr 46px 30px 1fr 84px;gap:8px;align-items:center;padding:3px 0;font-size:12.5px}
+.nvname{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:11px}
+@media(max-width:820px){.nvrow{grid-template-columns:38px 40px 76px 30px 1fr 46px 30px 1fr 84px}.nvname{display:none}}
+.nvrow .lbl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);text-align:right}
+.nvid{color:var(--acc)}.nvnum{text-align:right;color:var(--dim)}
+.nvbar{height:11px;background:var(--panel2);border:1px solid var(--line);border-radius:2px}
+.nvbar i{display:block;height:100%;border-radius:1px}
 .gpucard{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
 .gpuhead{display:flex;justify-content:space-between;align-items:baseline}
 .gpumain{display:flex;gap:12px;align-items:center;margin-top:6px}
@@ -375,8 +418,7 @@ table{border-collapse:collapse;width:100%}td{padding:4px 10px 4px 0;border-botto
 <div id="mods"></div>
 <script>
 const MODS=[
- {id:'talk',title:'observer — conversation'},
- {id:'obself',title:'observer — activity'},
+ {id:'talk',title:'observer'},
  {id:'cond',title:'conductor — pipeline'},
  {id:'now',title:'now — host & gpu'},
  {id:'agents',title:'workers — dispatched subagents'},
@@ -391,7 +433,7 @@ const root=document.getElementById('mods');
 order.forEach(id=>{const m=MODS.find(x=>x.id===id);if(!m)return;
  const d=document.createElement('div');d.className='mod';d.id='mod-'+id;
  const inner = id==='talk'
-  ? `<div id="talkmsgs"></div><div id="say"><input id="sayin" placeholder="message the observer…"><button onclick="say()">Send</button></div>`
+  ? `<div id="obshead"></div><div id="talkmsgs"></div><div id="say"><input id="sayin" placeholder="message the observer…"><button onclick="say()">Send</button></div>`
   : '';
  d.innerHTML=`<div class="mod-h" draggable="true"><span>${m.title}</span><span class="dim">⋮⋮</span></div><div class="mod-b" id="${id}">${inner}</div>`;
  if(hts[id])d.querySelector('.mod-b').style.height=hts[id]+'px';
@@ -426,39 +468,34 @@ async function poll(){try{
  if(s.project){const pj=document.getElementById('proj');if(pj)pj.textContent=s.project;document.title='EAIR live · '+s.project;}
  const g=s.gpu.gpus||[];
  const hist0=(s.gpu.hist||[]).length;
- const ring=(pct,color)=>{const C=2*Math.PI*26,d=C*Math.min(100,pct)/100;
-  return`<svg width="72" height="72" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="var(--panel2)" stroke-width="7"/>
-   <circle cx="32" cy="32" r="26" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round"
-    stroke-dasharray="${d} ${C-d}" transform="rotate(-90 32 32)"/>
-   <text x="32" y="37" text-anchor="middle" fill="var(--ink)" font-size="15" font-family="ui-monospace,Menlo,monospace">${pct}</text></svg>`;};
- const meter=(lbl,val,max,unit,warn,crit)=>{const p=Math.min(100,val/max*100);
-  const c=p>crit?'var(--crit)':p>warn?'var(--warn)':'var(--acc)';
-  return`<div class="meter"><span class="lbl">${lbl}</span>
-   <div class="bar wide"><i style="width:${p.toFixed(0)}%;background:${c}"></i></div>
-   <span class="mono dim">${val}${unit}</span></div>`;};
- const tempChip=t=>`<span class="chip ${t>=80?'crit':t>=65?'warn':'good'}">${t}°C</span>`;
+ const tempC=t=>t>=80?'var(--crit)':t>=65?'var(--warn)':'var(--good)';
+ const nvbar=(pct,color)=>{const p=Math.min(100,pct);
+  return`<div class="nvbar"><i style="width:${p.toFixed(1)}%;background:${color}"></i></div>`;};
  const utilColor=u=>u>85?'var(--good)':u>5?'var(--warn)':'var(--dim)';
+ const memColor=p=>p>92?'var(--crit)':p>75?'var(--warn)':'var(--acc)';
  put('now',
-  `<div class="gpugrid">${g.map((x,i)=>`<div class="gpucard">
-     <div class="gpuhead"><span class="lbl">GPU${i} · util%</span>${tempChip(x.t)}</div>
-     <div class="gpumain">${ring(x.util,utilColor(x.util))}
-      <div class="gpumeters">
-       ${meter('vram',(x.mem/1024).toFixed(1),(x.mem_total||49140)/1024,'G',75,92)}
-       ${meter('power',Math.round(x.w),x.w_cap||200,'W',80,95)}
-      </div></div></div>`).join('')}
-   <div class="gpucard">
-     <div class="gpuhead"><span class="lbl">server0</span><span class="mono dim">load ${s.host.load1}</span></div>
-     <div class="gpumeters" style="margin-top:8px">
-      ${meter('disk',s.host.disk_pct,100,'%',80,90)}
-      ${meter('ram free',s.host.mem_avail_gb,8,'G',999,999)}
-     </div>
-     <div class="small dim" style="margin-top:6px">tmux: ${esc((s.gpu.tmux||[]).join(', ')||'none')} · gpu ${s.gpu.sampled_at?Math.round(s.epoch-s.gpu.sampled_at)+'s ago':'–'}</div>
-   </div></div>
-   <canvas id="ghist" data-n="${hist0}" height="46" style="width:100%;margin-top:10px"></canvas>`);
+  `<div class="mono small dim" style="margin-bottom:4px">${esc(s.gpu_host||'gpu')} · sampled ${s.gpu.sampled_at?Math.round(s.epoch-s.gpu.sampled_at)+'s ago':'–'}</div>`
+  +g.map((x,i)=>{const mp=x.mem/(x.mem_total||1)*100;
+   return`<div class="nvrow mono">
+    <span class="nvid">GPU${i}</span>
+    <span class="nvname dim">${esc(x.name||'')}</span>
+    <span style="color:${tempC(x.t)}">${x.t}°C</span>
+    <span class="dim">${Math.round(x.w)}/${Math.round(x.w_cap)}W</span>
+    <span class="lbl">UTL</span>${nvbar(x.util,utilColor(x.util))}<span class="nvnum">${x.util}%</span>
+    <span class="lbl">MEM</span>${nvbar(mp,memColor(mp))}<span class="nvnum">${(x.mem/1024).toFixed(1)}/${Math.round((x.mem_total||0)/1024)}G</span>
+   </div>`;}).join('')
+  +`<canvas id="ghist" data-n="${hist0}" height="46" style="width:100%;margin:8px 0 4px"></canvas>
+   <table class="mono small">${(s.gpu.procs||[]).map(p=>
+    `<tr><td class="dim">GPU${p.gpu}</td><td>${esc(p.pid)}</td><td>${esc(p.user)}</td>
+     <td class="dim">${esc(p.time)}</td><td>${(p.mem/1024).toFixed(1)}G</td>
+     <td class="dim" style="word-break:break-all">${esc(p.cmd)}</td></tr>`).join('')
+    ||'<tr><td class="dim">no compute processes</td></tr>'}</table>
+   <div class="small dim" style="margin-top:6px">server0 load ${s.host.load1} · disk ${s.host.disk_pct}% · ram free ${s.host.mem_avail_gb}G · tmux: ${esc((s.gpu.tmux||[]).join(', ')||'none')}</div>`);
  const hist=s.gpu.hist||[];const hc=document.getElementById('ghist');
  if(hc&&hist.length>1){hc.width=hc.clientWidth;const c2=hc.getContext('2d');
   const W2=hc.width,H2=hc.height;
-  ['#7fb4c9','#d1a04a'].forEach((col,gi)=>{c2.strokeStyle=col;c2.lineWidth=1.4;c2.beginPath();
+  ['#7fb4c9','#d1a04a','#6aa87b','#c65f57'].forEach((col,gi)=>{if(!g[gi])return;
+   c2.strokeStyle=col;c2.lineWidth=1.4;c2.beginPath();
    hist.forEach((h,i)=>{const x=i*W2/(hist.length-1),y=H2-4-(H2-8)*(h.u[gi]||0)/100;
     i?c2.lineTo(x,y):c2.moveTo(x,y);});c2.stroke();});}
  const ob=s.observer.card;
@@ -467,14 +504,12 @@ async function poll(){try{
   const p=ob.window?Math.min(100,ob.occupancy/ob.window*100):0;
   if(b){b.style.width=p.toFixed(0)+'%';b.className=p>75?'hot':p>50?'mid':'';}
   if(n)n.textContent=`${(ob.occupancy/1000).toFixed(0)}k / ${(ob.window/1000).toFixed(0)}k · ${p.toFixed(0)}%`;})();
+ put('obshead', ob ? `${ob.live?chip('live','good'):chip('idle','warn')}
+   <span class="chip acc">${esc(ob.model||'?')}</span>
+   ${ob.last_tool?`<span class="chip acc">▶ ${esc(ob.last_tool)}</span>`:''}
+   <span class="lbl">ctx</span>${bar(ob.occupancy,ob.window)}`
+  : '<span class="dim small">no observer transcript found</span>');
  put('talkmsgs',s.observer.messages.map(m=>`<div class="msg ${m.role}">${esc(m.text)}</div>`).join(''));
- put('obself', ob ? `<div class="cond">
-   <div class="condhead">${ob.live?chip('live','good'):chip('idle','warn')}
-    <span class="chip acc">${esc(ob.model||'?')}</span>
-    ${ob.last_tool?`<span class="chip acc">▶ ${esc(ob.last_tool)}</span>`:''}</div>
-   <div class="condctx"><span class="lbl">ctx</span>${bar(ob.occupancy,ob.window)}</div>
-   <div class="msg assistant small">${esc(ob.activity||'—')}</div>
-  </div>` : '<div class="dim small">no observer transcript found</div>');
  const cd=s.conductor;
  put('cond', cd ? `<div class="cond">
    <div class="condhead">${cd.live?chip('live','good'):chip('idle','warn')}
