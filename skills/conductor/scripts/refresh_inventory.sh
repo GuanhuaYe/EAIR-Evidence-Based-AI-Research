@@ -11,7 +11,7 @@
 #   REMOTE_ROOT         Workspace root on the GPU host (default: ~/work)
 #
 # Called on-demand before any acquisition action (hourly auto-refresh is
-# optional heartbeat automation, not included in v1).
+# can ride the user's cron alongside pulse; never started by the conductor).
 #
 # NOT `set -e` — many sub-commands return non-zero naturally (grep -c on empty input).
 

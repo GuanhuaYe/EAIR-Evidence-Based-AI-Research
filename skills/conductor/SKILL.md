@@ -34,9 +34,9 @@ Path conventions (override via environment variables; see also `config.yaml`):
 3. **NEVER** draft paper → Writer
 4. **NEVER** self-review → cross-model (opus produces, sonnet reviews)
 5. **NEVER** read source code → Auditor. Only read: output.json, PIPELINE_STATE, logs.
-6. **NEVER** start the heartbeat script — user-managed only. (Optional heartbeat automation, not included in v1.)
+6. **NEVER** start, restart, or wake yourself — pulse (the clock) and any driver script are user-managed only. You register alarms; whoever watches ALARMS.jsonl decides whether to wake you.
 7. **ONLY method papers.** Every selected idea MUST propose a novel method/algorithm/system. NEVER write benchmark-only, phenomenon analysis, or problem-revealing papers. Analysis and benchmarking may be COMPONENTS of a method paper, but never the sole contribution. Filter out non-method ideas at Stage 1 Gate.
-8. **FILE_REGISTRY — mandatory artifact tracking.** Every experiment directory MUST have `FILE_REGISTRY.json` managed by `registry.py` (`~/.claude/skills/conductor/scripts/registry.py`). Agents MUST use `Registry.create()` for file writes under experiment dirs — direct `open()` writes prohibited. `Registry.read()` blocks access to superseded artifacts. Old versions auto-archived with version suffix. A periodic registry audit catches unregistered files (optional heartbeat automation, not included in v1).
+8. **FILE_REGISTRY — mandatory artifact tracking.** Every experiment directory MUST have `FILE_REGISTRY.json` managed by `registry.py` (`~/.claude/skills/conductor/scripts/registry.py`). Agents MUST use `Registry.create()` for file writes under experiment dirs — direct `open()` writes prohibited. `Registry.read()` blocks access to superseded artifacts. Old versions auto-archived with version suffix. A periodic registry audit catches unregistered files (add it to the user's cron alongside pulse if desired; never self-started).
 9. **Permitted actions (ONLY these):**
    - Dispatch agents (background, with task.json)
    - Read/write: PIPELINE_STATE.json, CONDUCTOR_LOG.json, SUPERVISOR_BRIEF.md, FILE_REGISTRY.json
@@ -50,7 +50,7 @@ Path conventions (override via environment variables; see also `config.yaml`):
 10. **EVOLUTION.md ledger — mandatory per project.** Every paper/project root MUST maintain `EVOLUTION.md` in the ledger format: each entry = what changed / test set + model + conditions / metrics quoted verbatim / mechanism / lesson, plus a **metric-comparability rules** section (cross-version numbers not comparable unless test set + model + conditions match — annotate) and a **"do-not-retry" veto list** (vetoed directions with the evidence that killed them). Supervisor MUST read the veto list at every Gate decision; grill-doc's defender cites this ledger as primary evidence (REP-3). CONDUCTOR_LOG.json is the append-only dispatch log; EVOLUTION.md is the structured negative-results memory — both required, neither substitutes for the other. Rationale: cross-version numbers without matching conditions are incomparable, and pipelines quietly re-walk dead ends (including published traps like underpowered small-n probing) unless the kill evidence stays visible at every gate.
 
 11. **Shared resources check before acquisition.** BEFORE dispatching any agent whose task involves `huggingface-cli download`, `wget` model/dataset, `pip install <heavy-ML-pkg>`, conda env creation, or `git clone <dataset>`:
-    - Read `$PROJECT_ROOT/.shared_inventory.md` (refresh manually: `bash ~/.claude/skills/conductor/scripts/refresh_inventory.sh`; hourly auto-refresh is optional heartbeat automation, not included in v1)
+    - Read `$PROJECT_ROOT/.shared_inventory.md` (refresh manually: `bash ~/.claude/skills/conductor/scripts/refresh_inventory.sh`; hourly auto-refresh can ride the user's cron alongside pulse; never self-started)
     - If keyword matches an existing model/dataset/env → use that, do NOT re-download or re-create.
     - **Env policy on a multi-user GPU server: use conda, not venv.**
       - Team-shared envs: `$ENVS_DIR/<purpose>/` (anyone activates, no install needed)
@@ -157,13 +157,11 @@ Fourteen academic-methodology skills under `~/.claude/skills/`: seven core metho
 
 ---
 
-## Heartbeat (optional automation, not included in v1)
+## Heartbeat: the clock ships, the driver doesn't
 
-An optional user-managed heartbeat script can wake the conductor periodically to check state. The conductor NEVER starts it.
-- Start: `tmux new-session -d -s heartbeat 'bash <your-heartbeat-script>.sh'`
-- Stop: `tmux kill-session -t heartbeat`
+The observation half is `scripts/pulse.py` on the user's cron (see "Clock service" above): it records liveness and fires registered alarms to `ALARMS.jsonl` — it never messages you. The driver half — a resident script that pings you periodically to dispatch queued work — deliberately does not ship: acting on an alarm is a judgment call, made by whoever watches the alarms (the user or an observer agent), delivered as a wake signal. If the user runs a driver anyway it is theirs to manage; you NEVER start, restart, or wake yourself.
 
-On wake-up: check state against every rule above → issue found? fix directly, NEVER ask questions (deadlock — no one answers). Log check to EAIR_LOG.
+On any wake-up: check state against every rule above → issue found? fix directly, NEVER ask questions (deadlock — no one answers). Log the check.
 
 ## State Files
 

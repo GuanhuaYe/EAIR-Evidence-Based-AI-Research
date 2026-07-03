@@ -78,10 +78,16 @@ Operational rules:
 - Power-limited GPUs lose roughly proportional throughput; re-estimate
   runtimes before committing to deadlines.
 
-## Optional: heartbeat automation
+## Heartbeat: what ships and what doesn't
 
-Our internal deployment adds a user-managed heartbeat (a tmux script that
-pings the conductor every N minutes to check gates and dispatch queued
-work). It is deliberately not shipped in v1; the conductor works fine
-interactively. If you build one, keep it user-managed — the conductor must
-never start or restart its own heartbeat (that is a hard rule).
+The observation half ships: `pulse.py` (see the README) is a cron tick
+that records liveness and fires deadline alarms to `ALARMS.jsonl`. It
+records and rings; it never messages an agent.
+
+The driver half deliberately does not ship: a resident script that pings
+the conductor every N minutes to check gates and dispatch queued work.
+Acting on an alarm is a judgment call — quiet-because-waiting and
+quiet-because-dead look identical to a script — so whoever watches
+`ALARMS.jsonl` (the user, or an observer agent) adjudicates and delivers
+the wake signal. If you build a driver anyway, keep it user-managed: the
+conductor must never start, restart, or wake itself (hard rule).
