@@ -233,7 +233,12 @@ h1{font-size:15px;margin:0;letter-spacing:.4px}h1 span{color:var(--acc)}
 .mod{background:var(--panel);border:1px solid var(--line);border-radius:5px;margin-bottom:12px}
 .mod-h{display:flex;justify-content:space-between;padding:7px 12px;border-bottom:1px solid var(--line);
 cursor:grab;user-select:none;font-size:10.5px;text-transform:uppercase;letter-spacing:.13em;color:var(--dim)}
-.mod-b{padding:10px 12px;overflow:auto;resize:vertical;min-height:40px}
+.mod-b{padding:10px 12px;overflow-y:auto;overflow-x:hidden;resize:vertical;min-height:60px;height:240px}
+#talk{height:430px}#now{height:300px}#log{height:260px}
+.mod-b::-webkit-scrollbar{width:9px}.mod-b::-webkit-scrollbar-track{background:var(--panel)}
+.mod-b::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+.mod-b::-webkit-scrollbar-thumb:hover{background:var(--dim)}
+.mod-b{scrollbar-width:thin;scrollbar-color:var(--line) var(--panel)}
 .mod.drag{opacity:.4}
 .chip{display:inline-block;padding:0 8px;border-radius:3px;font-size:11px;font-family:ui-monospace,Menlo,monospace}
 .chip.good{background:#22352a;color:var(--good)}.chip.warn{background:#3a3120;color:var(--warn)}
