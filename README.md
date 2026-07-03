@@ -165,15 +165,30 @@ context re-read just to poll.
 
 
 `conductor/scripts/panel.py` serves a single-page console (stdlib only,
-zero tokens): a second-precision clock, GPU ring gauges with VRAM/power
-meters and a utilization history line, per-agent context occupancy parsed
-from transcript tails, each agent's latest output, the knowledge tree,
-alarms, and the progress log — polled every 3 s. The top module mirrors
-your conversation with the observer and includes an input box; messages
-land in `PANEL_INBOX.jsonl`, which the observer tails. Modules drag to
-reorder and resize; layout persists in the browser. Bind it to a private
-interface — a tailnet address or `127.0.0.1` behind an SSH tunnel — never
-a public one; the bind address is the only access control:
+zero tokens), polled every 3 s and organized by a bottom tab bar that
+mirrors the supervision topology:
+
+- **agent** — one pane per layer. The observer pane shows its status
+  chips and context bar, the conversation, and an input box pinned to
+  the bottom; messages land in `PANEL_INBOX.jsonl`, which the observer
+  tails. The conductor pane is detected among dispatched subagents by
+  its role prompt and keeps a scrollable history of everything it has
+  reported. The workers table lists every other dispatched agent with
+  its context occupancy and latest output, labels read from transcript
+  heads so long-running agents never go anonymous.
+- **nvitop** — one compact row per GPU (model, temperature, power,
+  colored UTL/MEM bars), a utilization history line for all cards, and
+  an nvitop-style compute-process table: GPU, PID, user, elapsed time,
+  VRAM, command — so you can tell your run from a colleague's at a
+  glance.
+- **log** — the knowledge tree, experiment verdicts, clock alarms, and
+  the progress log.
+
+A second-precision clock sits in the header next to the observer's
+context bar. Panes drag to reorder and resize; layout and active tab
+persist in the browser. Bind it to a private interface — a tailnet
+address or `127.0.0.1` behind an SSH tunnel — never a public one; the
+bind address is the only access control:
 
 ```
 panel.py --project-dir <project> --bind <tailnet-ip> --port 8377 [--gpu-host <alias>]
