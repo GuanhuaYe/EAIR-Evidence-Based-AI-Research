@@ -297,6 +297,17 @@ real work: inference-only experiments through LLM APIs, offline analyses of
 existing outputs, and the whole science layer (preregistration, bundles,
 audits) applies unchanged.
 
+**Does this require Claude?** The skills never call a model API — they are
+protocol documents plus stdlib Python, and the only binding is the harness:
+anything that reads markdown skills, spawns subagents, and has file/shell
+tools can run them. Claude Code is what we test on. DeepSeek exposes an
+Anthropic-compatible API endpoint, so pointing Claude Code at it via
+`ANTHROPIC_BASE_URL` should work — untested by us so far. The protocol
+itself assumes workers are unreliable regardless of vendor (gates, audits,
+and the clock exist for exactly that), so a weaker brain degrades step
+quality, not system correctness. As experiment *subjects*, models are
+just weights under vLLM — DeepSeek, Qwen, gemma, Llama all alike.
+
 **Why cross-model review?** Because same-model self-review rubber-stamps.
 We tried it. The planted bug in the demo is the kind of thing a hostile
 second family catches and a friendly self-review doesn't.
