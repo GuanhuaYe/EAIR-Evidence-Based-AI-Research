@@ -282,7 +282,10 @@ const hts=JSON.parse(localStorage.getItem('hts')||'{}');
 const root=document.getElementById('mods');
 order.forEach(id=>{const m=MODS.find(x=>x.id===id);if(!m)return;
  const d=document.createElement('div');d.className='mod';d.id='mod-'+id;
- d.innerHTML=`<div class="mod-h" draggable="true"><span>${m.title}</span><span class="dim">⋮⋮</span></div><div class="mod-b" id="${id}"></div>`;
+ const inner = id==='talk'
+  ? `<div id="talkmsgs"></div><div id="say"><input id="sayin" placeholder="message the observer…"><button onclick="say()">Send</button></div>`
+  : '';
+ d.innerHTML=`<div class="mod-h" draggable="true"><span>${m.title}</span><span class="dim">⋮⋮</span></div><div class="mod-b" id="${id}">${inner}</div>`;
  if(hts[id])d.querySelector('.mod-b').style.height=hts[id]+'px';
  root.appendChild(d);});
 let dragEl=null;
@@ -298,6 +301,12 @@ function tick(){const d=new Date(Date.now()+off);
  document.getElementById('clock').textContent=d.toTimeString().slice(0,8);}
 setInterval(tick,250);
 const esc=s=>(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const _last={};
+function put(id,html){ if(_last[id]===html)return;               // diff: untouched DOM if unchanged
+ const el=document.getElementById(id); if(!el)return;
+ const atBottom=el.scrollHeight-el.scrollTop-el.clientHeight<60;
+ const st=el.scrollTop; el.innerHTML=html; _last[id]=html;
+ el.scrollTop=(id==='talkmsgs'&&atBottom)?el.scrollHeight:st; }  // chat sticks to bottom, others keep place
 const chip=(t,c)=>`<span class="chip ${c}">${esc(t)}</span>`;
 const VC={REPLICATED:'good',PROVEN:'good',CONFIRMED:'good',INSUFFICIENT:'warn',CONFOUNDED:'warn',OPEN:'warn',FAIL:'crit',REFUTED:'crit',armed:'acc',fired:'crit',met:'good'};
 function bar(occ,win){if(occ==null)return'<span class="dim">–</span>';
@@ -307,6 +316,7 @@ async function poll(){try{
  const s=await(await fetch('/api/state')).json();
  off=s.epoch*1000-Date.now();
  const g=s.gpu.gpus||[];
+ const hist0=(s.gpu.hist||[]).length;
  const ring=(pct,color)=>{const C=2*Math.PI*26,d=C*Math.min(100,pct)/100;
   return`<svg width="72" height="72" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="var(--panel2)" stroke-width="7"/>
    <circle cx="32" cy="32" r="26" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round"
@@ -319,7 +329,7 @@ async function poll(){try{
    <span class="mono dim">${val}${unit}</span></div>`;};
  const tempChip=t=>`<span class="chip ${t>=80?'crit':t>=65?'warn':'good'}">${t}°C</span>`;
  const utilColor=u=>u>85?'var(--good)':u>5?'var(--warn)':'var(--dim)';
- document.getElementById('now').innerHTML=
+ put('now',
   `<div class="gpugrid">${g.map((x,i)=>`<div class="gpucard">
      <div class="gpuhead"><span class="lbl">GPU${i} · util%</span>${tempChip(x.t)}</div>
      <div class="gpumain">${ring(x.util,utilColor(x.util))}
@@ -335,7 +345,7 @@ async function poll(){try{
      </div>
      <div class="small dim" style="margin-top:6px">tmux: ${esc((s.gpu.tmux||[]).join(', ')||'none')} · gpu ${s.gpu.sampled_at?Math.round(s.epoch-s.gpu.sampled_at)+'s ago':'–'}</div>
    </div></div>
-   <canvas id="ghist" height="46" style="width:100%;margin-top:10px"></canvas>`;
+   <canvas id="ghist" data-n="${hist0}" height="46" style="width:100%;margin-top:10px"></canvas>`);
  const hist=s.gpu.hist||[];const hc=document.getElementById('ghist');
  if(hc&&hist.length>1){hc.width=hc.clientWidth;const c2=hc.getContext('2d');
   const W2=hc.width,H2=hc.height;
@@ -343,23 +353,21 @@ async function poll(){try{
    hist.forEach((h,i)=>{const x=i*W2/(hist.length-1),y=H2-4-(H2-8)*(h.u[gi]||0)/100;
     i?c2.lineTo(x,y):c2.moveTo(x,y);});c2.stroke();});}
  const oc=s.observer.context;
- document.getElementById('talk').innerHTML=
+ put('talkmsgs',
   (oc?`<div class="small dim">observer context ${bar(oc.occupancy,oc.window)}</div>`:'')+
-  s.observer.messages.map(m=>`<div class="msg ${m.role}">${esc(m.text)}</div>`).join('')+
-  `<div id="say"><input id="sayin" placeholder="message the observer… (lands in its conversation within seconds)">
-   <button onclick="say()">Send</button></div>`;
- document.getElementById('agents').innerHTML='<table>'+s.agents.map(a=>
+  s.observer.messages.map(m=>`<div class="msg ${m.role}">${esc(m.text)}</div>`).join(''));
+ put('agents','<table>'+s.agents.map(a=>
   `<tr><td>${a.live?chip('live','good'):chip('idle','warn')}</td>
    <td class="mono">${esc(a.model||'?')}</td><td>${bar(a.occupancy,a.window)}</td>
-   <td class="small"><div class="dim">${esc(a.label)}</div><div>${esc(a.activity)}</div></td></tr>`).join('')+'</table>';
- document.getElementById('hyp').innerHTML='<table>'+s.hypotheses.map(h=>
-  `<tr><td class="mono">${esc(h.id)}</td><td>${chip(h.status,VC[h.status]||'warn')}</td><td class="small dim">${esc(h.short)}</td></tr>`).join('')+'</table>';
- document.getElementById('exp').innerHTML='<table>'+s.experiments.map(e=>
-  `<tr><td class="mono">${esc(e.name)}</td><td>${chip(e.verdict,VC[e.verdict]||'warn')}</td></tr>`).join('')+'</table>';
- document.getElementById('alarms').innerHTML='<table>'+s.alarms.map(a=>
-  `<tr><td class="mono">${esc(a.id)}</td><td>${chip(a.state,VC[a.state])}</td><td class="mono dim">${esc((a.deadline||'').slice(11,16))}</td><td class="small dim">${esc(a.note)}</td></tr>`).join('')+'</table>';
- document.getElementById('log').innerHTML='<table>'+s.log.map(e=>
-  `<tr><td class="mono dim">${esc(e.ts.slice(5,16))}</td><td class="mono">${esc(e.action)}</td><td class="small dim">${esc(e.detail)}</td></tr>`).join('')+'</table>';
+   <td class="small"><div class="dim">${esc(a.label)}</div><div>${esc(a.activity)}</div></td></tr>`).join('')+'</table>');
+ put('hyp','<table>'+s.hypotheses.map(h=>
+  `<tr><td class="mono">${esc(h.id)}</td><td>${chip(h.status,VC[h.status]||'warn')}</td><td class="small dim">${esc(h.short)}</td></tr>`).join('')+'</table>');
+ put('exp','<table>'+s.experiments.map(e=>
+  `<tr><td class="mono">${esc(e.name)}</td><td>${chip(e.verdict,VC[e.verdict]||'warn')}</td></tr>`).join('')+'</table>');
+ put('alarms','<table>'+s.alarms.map(a=>
+  `<tr><td class="mono">${esc(a.id)}</td><td>${chip(a.state,VC[a.state])}</td><td class="mono dim">${esc((a.deadline||'').slice(11,16))}</td><td class="small dim">${esc(a.note)}</td></tr>`).join('')+'</table>');
+ put('log','<table>'+s.log.map(e=>
+  `<tr><td class="mono dim">${esc(e.ts.slice(5,16))}</td><td class="mono">${esc(e.action)}</td><td class="small dim">${esc(e.detail)}</td></tr>`).join('')+'</table>');
 }catch(e){}}
 async function say(){const i=document.getElementById('sayin');const t=i.value.trim();if(!t)return;
  await fetch('/api/say',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})});
