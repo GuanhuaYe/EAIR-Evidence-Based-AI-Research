@@ -112,10 +112,15 @@ def check_alarms(project, tick_ts):
         met, stale = False, False
         if ctype == "file_exists" and target:
             met = os.path.exists(target)
-        elif ctype == "mtime_advance" and target:
+        elif ctype == "mtime_advance" and (target or cond.get("paths")):
             within = float(cond.get("within_min", 20)) * 60
-            m = newest_mtime(target) if os.path.isdir(target) else (
-                os.path.getmtime(target) if os.path.exists(target) else 0)
+            paths = ([os.path.join(project, x) for x in cond.get("paths", [])]
+                     or [target])
+            m = 0
+            for t in paths:
+                mt = newest_mtime(t) if os.path.isdir(t) else (
+                    os.path.getmtime(t) if os.path.exists(t) else 0)
+                m = max(m, mt)
             # grace period: staleness counts from registration, not from an
             # mtime that was already old when the alarm was armed
             try:
