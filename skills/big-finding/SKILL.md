@@ -95,7 +95,30 @@ Do NOT invoke for:
 
 ### Stage 1 — Hypothesis formulation
 
-INPUT: current `tree.json` state + user goal OR triggering anomaly.
+INPUT: current `tree.json` state + user goal OR triggering anomaly
+**+ a live external-knowledge scan (mandatory, see below).** The tree and
+your own data are necessary but NOT sufficient — formulating from them
+alone is 思而不学 (thinking without learning): you will re-derive settled
+results and miss mechanisms and confounds the field already knows.
+
+**MANDATORY literature grounding — run BEFORE writing any candidate.**
+For each prospective hypothesis, `WebSearch`/`WebFetch` the current
+literature (and invoke `citation-verifier` when a specific prior claim
+must be pinned) to establish:
+- **Novelty / redundancy:** has this already been proven or refuted? If a
+  credible source settles it, do NOT spend a bundle — record the citation
+  in the tree node and pivot. This is an entry gate, not an afterthought.
+- **Mechanism priors:** what causal mechanisms does existing work already
+  propose? Fold them into `mechanism_claim` rather than inventing one cold.
+- **Known confounds:** what rival explanations have others reported? They
+  seed `alternatives_to_rule_out` — a bundle blind to a literature-known
+  confound is under-designed.
+- **Counter-intuitive check:** the "contradicts prior literature" bar for
+  a finding (see Big-finding criterion below) can only be judged against
+  literature you actually read.
+
+If the scan finds nothing relevant, log that explicitly (search terms +
+date) — "no external grounding" is a recorded decision, never a silent skip.
 
 OUTPUT: 1-3 candidate hypotheses, each with:
 
@@ -107,6 +130,7 @@ OUTPUT: 1-3 candidate hypotheses, each with:
 | `mechanism_claim` | causal story | "single-step constrained generation integrates all context; two-stage pipeline loses information per stage" |
 | `alternatives_to_rule_out` | rival explanations | "(a) confound: different K; (b) noise from different seeds; (c) sentence-transformer model under-tuned" |
 | `kill_criteria` | what makes it dead | "if letter < ST on any single dataset under controlled K, REFUTED" |
+| `literature_grounding` | key sources scanned + what they imply (search date) | "WebSearch 2026-07: [Xu'24] constrained decoding aids low-resource NER, no prior test on clinical-code disambiguation → novel; [Lee'23] reports K-mismatch confound → added to alternatives" |
 
 If user asks vague question ("is X better than Y"), the skill MUST
 push back: "what's the generalization scope, what threshold counts
