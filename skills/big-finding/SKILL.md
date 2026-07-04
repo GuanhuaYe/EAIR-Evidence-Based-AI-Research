@@ -98,8 +98,8 @@ Do NOT invoke for:
 INPUT: current `tree.json` state + user goal OR triggering anomaly
 **+ a live external-knowledge scan (mandatory, see below).** The tree and
 your own data are necessary but NOT sufficient — formulating from them
-alone is 思而不学 (thinking without learning): you will re-derive settled
-results and miss mechanisms and confounds the field already knows.
+alone is thinking without learning: you will re-derive settled results
+and miss mechanisms and confounds the field already knows.
 
 **MANDATORY literature grounding — run BEFORE writing any candidate.**
 For each prospective hypothesis, `WebSearch`/`WebFetch` the current
