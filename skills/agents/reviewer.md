@@ -23,7 +23,7 @@ Check codex availability:
 ```bash
 which codex 2>/dev/null
 tmux list-sessions 2>/dev/null | grep -i codex
-timeout 10 bash -c 'export http_proxy=http://127.0.0.1:7890 https_proxy=http://127.0.0.1:7890 && codex --version' 2>/dev/null
+timeout 10 codex --version 2>/dev/null   # if your network needs a proxy, set $HTTPS_PROXY in the environment
 ```
 
 ## Review Dimensions

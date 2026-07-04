@@ -195,8 +195,8 @@ project to another — run it on entry and the frontend follows you. It auto-bin
 the tailnet IP (`tailscale ip -4`), defaults `--gpu-host` to the data-plane host,
 and auto-detects the live Claude session's transcripts/tasks dirs.
 
-Two-tier gotcha: under the Paper control plane the Claude session cwd
-(`~/chaitin/Paper`) is NOT the project dir (`.../<paper>/big_finding`), so
+Two-tier gotcha: under the control plane the Claude session cwd
+(`$PROJECT_ROOT`) is NOT the project dir (`.../<paper>/big_finding`), so
 panel.py's own slug-derived transcript path would be wrong — `panel_ctl.sh`
 passes the session dirs explicitly to fix this. Point `--project-dir` at the
 directory that actually holds `tree.json` + `experiments/` (for a big-finding

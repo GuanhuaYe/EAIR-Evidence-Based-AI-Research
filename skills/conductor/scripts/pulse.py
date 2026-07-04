@@ -169,7 +169,7 @@ def main():
                     writes[d] = datetime.fromtimestamp(m).astimezone().isoformat(timespec="seconds")
 
     tick = {"ts": ts, "newest_writes": writes}
-    # local host vitals (server0): 1-min load, available RAM, project-fs disk use
+    # local host vitals (control host): 1-min load, available RAM, project-fs disk use
     try:
         tick["load1"] = float(open("/proc/loadavg").read().split()[0])
         mem = dict(l.split(":")[:2] for l in open("/proc/meminfo").read().splitlines()[:3])

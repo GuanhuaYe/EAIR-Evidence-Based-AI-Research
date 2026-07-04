@@ -12,9 +12,9 @@
 #   panel_ctl.sh status
 #   panel_ctl.sh url
 #
-# Two-tier note (Paper/EAIR conductor): the Claude session's cwd (the control
-# plane, e.g. ~/chaitin/Paper) is NOT the same as <project-dir> (e.g.
-# .../sigmod-med/big_finding). panel.py derives its transcript/tasks slug from
+# Two-tier note (EAIR conductor): the Claude session's cwd (the control
+# plane, e.g. ~/research/control-plane) is NOT the same as <project-dir> (e.g.
+# .../<project>/big_finding). panel.py derives its transcript/tasks slug from
 # <project-dir>, which is wrong in that layout — so this wrapper auto-detects
 # the live session dirs (newest under ~/.claude/projects) and passes them
 # explicitly. Override with --transcripts / --tasks-dir when you have >1 live
@@ -50,7 +50,7 @@ PROJECT_DIR="$(readlink -f "$PROJECT_DIR")"
 
 BIND="$(tailscale ip -4 2>/dev/null | head -1 || true)"; BIND="${BIND:-127.0.0.1}"
 PORT=8377
-GPU_HOST="${EAIR_GPU_HOST:-chaitin-server-4}"
+GPU_HOST="${EAIR_GPU_HOST:-gpu-host}"
 TRANSCRIPTS=""; TASKS_DIR=""
 while [ $# -gt 0 ]; do
   case "$1" in

@@ -24,7 +24,7 @@ performance review.
 - For OLMoE-1B-7B (~14GB bf16): fits on 4090, faster on A100 due to bandwidth
 
 **CPU/RAM:** (update when known)
-**Disk:** ~244GB free (as of 2026-03-18)
+**Disk:** (update when known)
 
 ## 2. Known Users & GPU Allocation
 
@@ -40,8 +40,11 @@ performance review.
 
 ## 3. Optimization Playbook (Accumulated Experience)
 
+(Illustrative entries from a reference project — replace with your own. Run
+IDs like `pilot-NNN` / `formal-NNN` below are example labels, not real runs.)
+
 ### OLMoE-1B-7B on RTX 4090
-- **KV-cache reuse for oracle gaps:** Collect KV cache for prefix once, eval each expert with single-position attention. ~2.3s/it → 60x speedup over naive (91s/it). (pilot-005, 2026-03-18)
+- **KV-cache reuse for oracle gaps:** Collect KV cache for prefix once, eval each expert with single-position attention. ~2.3s/it → 60x speedup over naive (91s/it). (example run)
 - **Per-expert forward pass:** 64 experts × 16 MoE layers, but only eval 4 target layers. Main bottleneck is the expert loop at each target layer.
 - **VRAM:** Model ~14GB + KV cache ~56MB + peak activations ~1.5GB = ~16.5GB / 24GB.
 - **Batch perplexity:** batch_size=8-16 safe on 4090 for this model.
@@ -60,7 +63,7 @@ performance review.
 | torch.compile | Graph optimization | 1.5-3x | Medium (compatibility) | (not yet tested on OLMoE) |
 
 ### What Didn't Work / Mistakes
-- **formal-001-crr (2026-03-19):** Engineer only profiled Step A (1.7s/it, LET_RUN) but ignored Step E benchmark eval using naive HuggingFace inference. Should have flagged Step E for vLLM optimization pre-run. **Lesson: MUST profile ALL steps, not just the first/current one.**
+- **Example mistake:** an engineer profiled only Step A (1.7s/it, LET_RUN) but ignored a later Step E benchmark eval running naive HuggingFace inference. Step E should have been flagged for vLLM optimization pre-run. **Lesson: MUST profile ALL steps, not just the first/current one.**
 
 ## 4. Model Performance Baselines
 
@@ -76,5 +79,6 @@ performance review.
 
 ## 5. Update Log
 
-- **2026-03-19:** Full pipeline profile of formal-001-crr (129 min total). Key findings: (1) 42% time in gamma search (sequential, parallelizable across GPUs), (2) 39% in condition eval (sequential seeds, parallelizable), (3) 19% in benchmarks (naive HF, vLLM could 5-10x). Estimated optimized runtime: ~33 min (3.9x speedup). Anti-patterns: sequential gamma/seed loops, batch_size=1 benchmarks, unconditional correction on ALL tokens.
-- **2026-03-18:** Initial creation. Hardware specs, user allocation, OLMoE optimization experience from pilot-005/006 and formal-001-crr.
+(Append dated entries here as you accumulate experience. Illustrative example:)
+
+- **Example entry:** Full-pipeline profile of a 129-min run. Key findings: (1) 42% time in gamma search (sequential, parallelizable across GPUs), (2) 39% in condition eval (sequential seeds, parallelizable), (3) 19% in benchmarks (naive HF, vLLM could 5-10x). Estimated optimized runtime: ~33 min (3.9x speedup). Anti-patterns: sequential gamma/seed loops, batch_size=1 benchmarks, unconditional correction on ALL tokens.

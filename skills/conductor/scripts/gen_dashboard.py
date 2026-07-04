@@ -162,8 +162,8 @@ def main():
     <div class="vital"><span class="lbl">GPU0</span><span class="mono">{gv(0,'util_pct','%')} · {gv(0,'power_w','W')} · {gv(0,'temp_c','°C')}</span></div>
     <div class="vital"><span class="lbl">GPU1</span><span class="mono">{gv(1,'util_pct','%')} · {gv(1,'power_w','W')} · {gv(1,'temp_c','°C')}</span></div>
     <div class="vital"><span class="lbl">tmux</span><span class="mono">{esc(', '.join(last.get('tmux') or []) or 'none')}</span></div>
-    <div class="vital"><span class="lbl">server0 load/mem/disk</span><span class="mono">{esc(last.get('load1','–'))} · {esc(last.get('mem_avail_gb','–'))}G · {esc(last.get('disk_pct','–'))}%</span></div>
-    <div class="vital"><span class="lbl">server-3 disk</span><span class="mono">{esc(last.get('remote_disk_pct','–'))}%</span></div>"""
+    <div class="vital"><span class="lbl">control-host load/mem/disk</span><span class="mono">{esc(last.get('load1','–'))} · {esc(last.get('mem_avail_gb','–'))}G · {esc(last.get('disk_pct','–'))}%</span></div>
+    <div class="vital"><span class="lbl">gpu-host disk</span><span class="mono">{esc(last.get('remote_disk_pct','–'))}%</span></div>"""
 
     doc = f"""<title>EAIR ops — {esc(proj)}</title>
 <style>

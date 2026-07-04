@@ -21,8 +21,8 @@ python3 code/dalle_api.py <output_path> "<prompt>" [size]
 ```
 
 - Sizes: `1024x1024`, `1536x1024` (landscape), `1024x1536` (portrait)
-- API key is at `~/.openai_api_key`
-- Uses proxy `http://127.0.0.1:7890`
+- API key is read from `$OPENAI_API_KEY`
+- If your network requires a proxy, set `$HTTPS_PROXY` in the environment
 
 ## Prompt Writing Rules
 
@@ -59,7 +59,7 @@ DALL-E cannot render precise numbers/labels reliably.
 - Do NOT crop, resize, rescale, or transform generated images
 - Save the raw output from gpt-image-1.5 as-is
 - Whitespace trimming and size adjustments are handled by the **Verifier agent** (V6)
-- Forced rescaling causes distortion — this has happened before and must not recur
+- Forced rescaling distorts the figure; never rescale generated output
 
 ## Env Policy (Multi-User GPU Server)
 

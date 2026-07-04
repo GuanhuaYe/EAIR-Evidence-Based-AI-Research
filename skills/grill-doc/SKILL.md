@@ -38,9 +38,9 @@ Iron rules (structural, not prompt-level):
 3. **Verdict by code.** PASS/BLOCK is computed from the tag table by
    gate.py rules. No LLM ever "weighs the overall picture".
 4. **No new exception routes.** The gate's acceptance criteria may be
-   tightened, never loosened (lesson: reconciliation routes may only be
-   removed, never added; adding one escape route collapsed a score of 81
-   to 0).
+   tightened, never loosened (reconciliation routes may only be removed,
+   never added — one added escape route can turn a strict gate into a
+   pass-everything sieve).
 5. **Cross-model.** When dispatched as agents, defender model ≠ griller
    model (the conductor cross-model rule).
 6. **Watch traces on small batches.** First runs on a new project: read

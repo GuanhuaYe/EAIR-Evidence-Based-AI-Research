@@ -267,7 +267,7 @@ Replaces human checkpoints. Automatically performs reviews and makes go/no-go de
    # Check for active tmux sessions
    tmux list-sessions 2>/dev/null | grep -i codex
    # Attempt codex health check
-   timeout 10 bash -c 'export http_proxy=http://127.0.0.1:7890 https_proxy=http://127.0.0.1:7890 && codex --version' 2>/dev/null
+   timeout 10 codex --version 2>/dev/null   # if your network needs a proxy, set $HTTPS_PROXY in the environment
    ```
 
 2. **Decision branches:**
@@ -332,7 +332,7 @@ All experiment scripts must output a metrics.json conforming to the following sc
 {
   "experiment_id": "pilot-003",
   "idea_id": "example-idea",
-  "timestamp": "2026-03-18T15:30:00",
+  "timestamp": "2025-01-15T15:30:00",
   "primary_metric": {
     "name": "top1_accuracy",
     "value": 0.312,
