@@ -20,7 +20,7 @@ actual GPU count and layout.)
 - The datacenter GPU has ~2x memory bandwidth → memory-bound ops (attention, large batch inference) ~2x faster
 - The consumer GPU has better FP16 compute density per watt but less VRAM
 - The datacenter GPU has an NVLink-class interconnect — multi-GPU comms fast. The consumer GPU is PCIe-only.
-- For OLMoE-1B-7B (~14GB bf16): fits on the consumer GPU, faster on the datacenter GPU due to bandwidth
+- For the target model (~14GB bf16): fits on the consumer GPU, faster on the datacenter GPU due to bandwidth
 
 **CPU/RAM:** (update when known)
 **Disk:** (update when known)
@@ -42,7 +42,7 @@ actual GPU count and layout.)
 (Illustrative entries from a reference project — replace with your own. Run
 IDs like `pilot-NNN` / `formal-NNN` below are example labels, not real runs.)
 
-### OLMoE-1B-7B on the consumer GPU
+### The target model on the consumer GPU
 - **KV-cache reuse for oracle gaps:** Collect KV cache for prefix once, eval each expert with single-position attention. ~2.3s/it → 60x speedup over naive (91s/it). (example run)
 - **Per-expert forward pass:** 64 experts × 16 MoE layers, but only eval 4 target layers. Main bottleneck is the expert loop at each target layer.
 - **VRAM:** Model ~14GB + KV cache ~56MB + peak activations ~1.5GB = ~16.5GB / 24GB.
@@ -59,7 +59,7 @@ IDs like `pilot-NNN` / `formal-NNN` below are example labels, not real runs.)
 | Sequential seed eval | Multi-GPU parallelism | 3x | Low | formal-001-crr (identified) |
 | Naive HF benchmark eval | vLLM + batching | 5-10x | Low | formal-001-crr Step E (identified) |
 | Unconditional on ALL tokens | Skip/approximate small corrections | 1.3x | Low | formal-001-crr (identified) |
-| torch.compile | Graph optimization | 1.5-3x | Medium (compatibility) | (not yet tested on OLMoE) |
+| torch.compile | Graph optimization | 1.5-3x | Medium (compatibility) | (not yet tested on target-model) |
 
 ### What Didn't Work / Mistakes
 - **Example mistake:** an engineer profiled only Step A (1.7s/it, LET_RUN) but ignored a later Step E benchmark eval running naive HuggingFace inference. Step E should have been flagged for vLLM optimization pre-run. **Lesson: MUST profile ALL steps, not just the first/current one.**
@@ -68,13 +68,13 @@ IDs like `pilot-NNN` / `formal-NNN` below are example labels, not real runs.)
 
 | Model | GPU | Task | Speed | Notes |
 |-------|-----|------|-------|-------|
-| OLMoE-1B-7B | consumer-24gb | Oracle gap collection (KV-cache) | ~1.7s/text | formal-001-crr Step A |
-| OLMoE-1B-7B | consumer-24gb | Perplexity eval | ~2s/batch (bs=8) | Estimate |
-| OLMoE-1B-7B | consumer-24gb | CRR real forward pass eval | ~8-11 tok/s | formal-001-crr Step D |
-| OLMoE-1B-7B | consumer-24gb | Benchmark eval (HF naive) | ~24 min for 7 benchmarks | formal-001-crr Step E |
-| OLMoE-1B-7B | consumer-24gb | Gamma search (5 values, sequential) | 54.5 min | formal-001-crr Step D |
-| OLMoE-1B-7B | consumer-24gb | Condition eval (3 seeds, sequential) | 50.5 min | formal-001-crr Step C/D |
-| OLMoE-1B-7B | datacenter-80gb | Oracle gap collection | ~0.8-1.0s/text | Estimate (2x bandwidth) |
+| target-model | consumer-24gb | Oracle gap collection (KV-cache) | ~1.7s/text | formal-001-crr Step A |
+| target-model | consumer-24gb | Perplexity eval | ~2s/batch (bs=8) | Estimate |
+| target-model | consumer-24gb | CRR real forward pass eval | ~8-11 tok/s | formal-001-crr Step D |
+| target-model | consumer-24gb | Benchmark eval (HF naive) | ~24 min for 7 benchmarks | formal-001-crr Step E |
+| target-model | consumer-24gb | Gamma search (5 values, sequential) | 54.5 min | formal-001-crr Step D |
+| target-model | consumer-24gb | Condition eval (3 seeds, sequential) | 50.5 min | formal-001-crr Step C/D |
+| target-model | datacenter-80gb | Oracle gap collection | ~0.8-1.0s/text | Estimate (2x bandwidth) |
 
 ## 5. Update Log
 

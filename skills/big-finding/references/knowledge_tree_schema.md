@@ -105,14 +105,14 @@ status is `status_history[-1].status`.
 ## ASCII visualization format
 
 ```
-└── H001 [PROVEN] Constrained-letter rerank beats sentence-transformer in narrow disambiguation
+└── H001 [PROVEN] single-step joint scoring beats two-stage retrieve-then-rank in small-catalog candidate matching
     │   E001: PROVEN (paired-t p=0.003, n=5, hardware datacenter-80gb, 4.2 GPU-h)
     │   E002: CONFOUNDED (K-ablation: K=12 reverses sign — needs deeper dive)
     │
-    ├── H002 [OPEN] Letter-rerank advantage scales with vocab size (K-effect mechanism)
+    ├── H002 [OPEN] joint-scoring advantage scales with vocab size (K-effect mechanism)
     │       (no experiments yet)
     │
-    └── H003 [REFUTED] Letter-rerank advantage holds on non-MIMIC narrow tasks
+    └── H003 [REFUTED] joint-scoring advantage holds on non-BENCH-A small-catalog tasks
             E003: REFUTED (on synthetic vocab-500 task, no significant difference)
 ```
 

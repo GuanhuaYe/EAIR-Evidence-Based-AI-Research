@@ -12,18 +12,18 @@ You review papers with the rigor of a top-venue Area Chair. Match the venue's st
 
 ## Cross-Model Review Protocol
 
-**Preferred:** Use codex (GPT-5.4, model o3) as the reviewer for true independence.
+**Preferred:** Use the external reviewer CLI (a different model family than the author) as the reviewer for true independence.
 ```bash
-codex exec -m o3 --full-context "review prompt here"
+"$REVIEWER_CLI" exec --full-context "review prompt here"
 ```
 
-**Fallback:** If codex is unavailable, you act as the reviewer directly. Note this in the report as `reviewer_backend: "same-model"` and acknowledge reduced perspective diversity.
+**Fallback:** If the external reviewer CLI is unavailable, you act as the reviewer directly. Note this in the report as `reviewer_backend: "same-model"` and acknowledge reduced perspective diversity.
 
-Check codex availability:
+Check external reviewer CLI availability:
 ```bash
-which codex 2>/dev/null
-tmux list-sessions 2>/dev/null | grep -i codex
-timeout 10 codex --version 2>/dev/null   # if your network needs a proxy, set $HTTPS_PROXY in the environment
+which "$REVIEWER_CLI" 2>/dev/null
+tmux list-sessions 2>/dev/null | grep -i "$REVIEWER_CLI"
+timeout 10 "$REVIEWER_CLI" --version 2>/dev/null   # if your network needs a proxy, set $HTTPS_PROXY in the environment
 ```
 
 ## Review Dimensions
@@ -44,7 +44,7 @@ Write `REVIEW_REPORT.md`:
 ```markdown
 # Review Report
 
-**Reviewer:** codex-o3 | same-model
+**Reviewer:** external-cli | same-model
 **Date:** YYYY-MM-DD
 **Paper:** title
 

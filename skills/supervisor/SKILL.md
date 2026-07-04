@@ -67,9 +67,9 @@ Replaces human checkpoints. Automatically performs reviews and makes go/no-go de
 **Execution steps:**
 1. Check if the ideas table in papers.db already has novelty results for this idea → if so, return directly
 2. Google Scholar search (SerpAPI, ≤5 queries, strictly observe the daily limit of 100 total calls):
-   - `"<core method keywords>" mixture of experts`
-   - `"<problem keywords>" MoE routing improvement`
-   - Known competitor names + MoE
+   - `"<core method keywords>"`
+   - `"<problem keywords>"`
+   - Known competitor names
 3. For each result, evaluate 3-axis overlap:
    - **Problem overlap:** Solves the same problem?
    - **Method overlap:** Uses the same technique?
@@ -123,7 +123,7 @@ Replaces human checkpoints. Automatically performs reviews and makes go/no-go de
 **Trigger condition:** idea-gen.generate is complete and a top idea has been selected
 
 **Execution steps:**
-1. Use Review Dispatch to select the review backend (codex or sonnet agent)
+1. Use Review Dispatch to select the review backend (the external reviewer CLI or sonnet agent)
 2. Send the idea to the reviewer, requesting evaluation on 4 dimensions:
    - **HOOK (1-5):** Can a single sentence convince the reviewer?
    - **DIFFERENTIATION (1-5):** Is the distinction from the strongest competitor clear enough?
@@ -260,25 +260,25 @@ Replaces human checkpoints. Automatically performs reviews and makes go/no-go de
 **Trigger condition:** paper-write's `review` or `improve` subcommand requires external review, or CP5 Idea Refinement needs review
 
 **Selection logic:**
-1. **Check codex availability:**
+1. **Check external reviewer CLI availability:**
    ```bash
-   # Check if codex is installed
-   which codex 2>/dev/null
+   # Check if the external reviewer CLI is installed
+   which "$REVIEWER_CLI" 2>/dev/null
    # Check for active tmux sessions
-   tmux list-sessions 2>/dev/null | grep -i codex
-   # Attempt codex health check
-   timeout 10 codex --version 2>/dev/null   # if your network needs a proxy, set $HTTPS_PROXY in the environment
+   tmux list-sessions 2>/dev/null | grep -i "$REVIEWER_CLI"
+   # Attempt external reviewer CLI health check
+   timeout 10 "$REVIEWER_CLI" --version 2>/dev/null   # if your network needs a proxy, set $HTTPS_PROXY in the environment
    ```
 
 2. **Decision branches:**
 
-   **Path A: Codex available** → Use codex-pilot skill via tmux interaction
-   - Follow codex-pilot's double-Enter protocol
+   **Path A: External reviewer CLI available** → Drive it via tmux interaction
+   - Follow the external reviewer CLI's double-Enter protocol
    - Send long text via batch file method
-   - **Each review round prompt must include all previous rounds' REVIEW_REPORT** (codex tmux has no stateful memory) ([C5] fix)
+   - **Each review round prompt must include all previous rounds' REVIEW_REPORT** (the external reviewer CLI's tmux has no stateful memory) ([C5] fix)
    - Monitor completion status
 
-   **Path B: Codex unavailable** → Fall back to Sonnet Agent
+   **Path B: External reviewer CLI unavailable** → Fall back to Sonnet Agent
    - Launch independent review agent using `Agent` tool with `model: "sonnet"`
    - Use review prompt template (see below)
    - Advantage: no external dependencies, no quota limits
@@ -319,7 +319,7 @@ Replaces human checkpoints. Automatically performs reviews and makes go/no-go de
 
 4. **Record which backend was used:**
    ```json
-   {"reviewer": "codex" | "sonnet-agent", "reason": "codex unavailable: no tmux session"}
+   {"reviewer": "external-cli" | "sonnet-agent", "reason": "external reviewer CLI unavailable: no tmux session"}
    ```
 
 ---
@@ -357,7 +357,7 @@ All experiment scripts must output a metrics.json conforming to the following sc
     "gpu_type": "datacenter-80gb"
   },
   "competitor_comparison": {
-    "name": "C3PO",
+    "name": "MethodX",
     "their_improvement": 0.15,
     "our_improvement": 0.20,
     "our_advantage": "100x lower inference cost"
@@ -441,6 +441,6 @@ exp-run.pilot     ──→ [CP1 single audit entry point] + [CP3] ──→ lau
                                                           exp-engineer.verify ──→ restart experiment
 exp-run.evaluate  ──→ [schema validation] ──→ [CP4] ──→ [Gate2] ──→ proceed/revise/abandon
 paper-write.draft ──→ [CP4] ──→ honest claims-matrix
-paper-write.review──→ [Review Dispatch] ──→ codex or sonnet-agent
+paper-write.review──→ [Review Dispatch] ──→ external reviewer CLI or sonnet-agent
 paper-write.improve → [Gate3 Triage] ──→ Type A (writing fix) or Type B (fall back to exp-run)
 ```

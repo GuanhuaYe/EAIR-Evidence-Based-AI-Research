@@ -60,7 +60,7 @@ Action:
 3. Update node notes: "Treatment effect explained by <confound>; ranking reverses when controlled."
 4. Re-run controlled bundle on the new child hypothesis
 
-Example: Original "Letter-rerank > ST-rerank" CONFOUNDED by K=28 vs K=12. New hypothesis: "Larger K → higher F1 regardless of rerank choice."
+Example: Original "joint scoring > two-stage" CONFOUNDED by K=28 vs K=12. New hypothesis: "Larger K → higher F1 regardless of scoring choice."
 
 ### 5. PIVOTED
 
@@ -102,8 +102,8 @@ re-interpreting the original rule.
 
 ## Multi-arm comparison subtleties
 
-When the bundle has 3+ treatment-style arms (e.g., letter-rerank,
-ST-rerank, and a 3rd alternative), the comparison structure must
+When the bundle has 3+ treatment-style arms (e.g., joint scoring,
+two-stage, and a 3rd alternative), the comparison structure must
 specify:
 
 - **Primary comparison**: treatment-1 vs baseline (the headline)
@@ -125,6 +125,6 @@ Even with stat-sig p<0.05, an effect size below the
 treated as REFUTED (you got a statistically detectable but
 practically meaningless effect).
 
-E.g., if falsifiable says "≥+0.02 absolute cm_F1", a measured
+E.g., if falsifiable says "≥+0.02 absolute match_F1", a measured
 +0.005 with p<0.01 is REFUTED, not PROVEN — the effect size
 threshold matters.

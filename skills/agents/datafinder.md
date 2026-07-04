@@ -95,7 +95,7 @@ For each candidate dataset, provide:
 - Check: are they already cached locally? (`~/.cache/huggingface/`)
 
 ### Cross-Model Validation Data
-- Same corpus must work across all target models (OLMoE, Mixtral, DeepSeekMoE)
+- Same corpus must work across all target models (e.g., Mixtral, DeepSeekMoE)
 - Tokenizer differences: ensure fair comparison (same text, different tokenizations)
 
 ## Rules

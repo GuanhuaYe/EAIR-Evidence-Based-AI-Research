@@ -12,7 +12,7 @@ The evidence for the finding MUST come from a bundle with `cv_folds ≥ 5`
 (K-fold cross-validation). Single-split + multi-seed-injection evidence
 is informative but NOT sufficient for Nature-worthy claims because:
 
-- A lucky train/test split could inflate the effect by 1-3pp on cm_F1-scale findings
+- A lucky train/test split could inflate the effect by 1-3pp on match_F1-scale findings
 - Multi-seed within one split tests injection noise, NOT partition noise
 - Cross-fold paired-t with K≥5 folds gives the strongest practical test
 
@@ -23,15 +23,15 @@ A node with PROVEN_SINGLE_SPLIT status CANNOT pass this gate until a
 
 ## Condition 1: Generalizes across ≥3 distinct domains
 
-Distinct = not MIMIC variants, not subsets of the same dataset.
+Distinct = not BENCH-A variants, not subsets of the same dataset.
 
 ✅ Examples of distinct:
-- MIMIC-III lab events + ICD code disambiguation + protein name resolution
+- three distinct small-catalog domains (product matching, address normalization, catalog-code lookup)
 - Code refactoring + medical coding + product taxonomy
 - 3 RAG benchmarks from different domains (legal, medical, scientific)
 
 ❌ Not distinct:
-- MIMIC-III + MIMIC-IV-Demo (same source, same task)
+- BENCH-A + BENCH-B (same source, same task)
 - 3 medical-coding tasks (one domain, different vocab)
 - 3 versions of the same dataset
 
@@ -44,11 +44,11 @@ top-level claim Nature-eligible.
 Not just "X correlates with Y" — must have a CAUSAL story tested
 by an ablation that predicted to-and-from-zero.
 
-✅ Mechanistic: "Constrained-letter rerank wins because single-step
-generation integrates context; if we artificially split it into
+✅ Mechanistic: "single-step joint scoring wins because it
+integrates context in one decision; if we artificially split it into
 two stages, the advantage disappears." (And the ablation confirms.)
 
-❌ Correlational: "Constrained-letter rerank wins on benchmark X."
+❌ Correlational: "single-step joint scoring wins on benchmark X."
 (No mechanism, no test of WHY.)
 
 ## Condition 3: Falsifiable
@@ -56,10 +56,10 @@ two stages, the advantage disappears." (And the ablation confirms.)
 The finding's claim must specify a future experiment that could
 disprove it.
 
-✅ "Letter-rerank advantage holds for vocab ≤ 10K"  — testable by trying vocab 50K
+✅ "joint-scoring advantage holds for vocab ≤ 10K"  — testable by trying vocab 50K
 ✅ "SC-3 hurts at T=0.7 on confident classifiers"  — testable by intermediate T
 
-❌ "Letter-rerank is in some sense better"  — vague, unfalsifiable
+❌ "joint scoring is in some sense better"  — vague, unfalsifiable
 ❌ "Our method works well"                    — not falsifiable
 
 ## Condition 4: Counter-intuitive OR foundational
@@ -83,11 +83,11 @@ false-positive repair (architectural property, theorem-formalized)."
 Not just sign of effect — must have a confidence interval and
 practical interpretation.
 
-✅ "Letter-rerank cm_F1 advantage = +0.036 ± 0.012 (95% CI on
+✅ "joint-scoring match_F1 advantage = +0.036 ± 0.012 (95% CI on
 paired-t across 5 seeds × 3 domains), p<0.001, equivalent to ~30%
 relative recall improvement."
 
-❌ "Letter-rerank wins"
+❌ "joint scoring wins"
 ❌ "p<0.05"
 
 ## Composite scoring
@@ -115,20 +115,20 @@ When a node passes all 5:
 
 ## Example: A passing finding
 
-Hypothesized: H001 "Constrained-letter rerank > sentence-transformer in narrow disambiguation"
+Hypothesized: H001 "single-step joint scoring > two-stage retrieve-then-rank in small-catalog candidate matching"
 
-After E001 (MIMIC-III), E002 (synthetic vocab-1K), E003 (Open-LOINC-real), the finding:
+After E001 (BENCH-A), E002 (synthetic vocab-1K), E003 (real catalog-code lookup), the finding:
 - ✅ Generalizes (3 distinct domains)
 - ✅ Mechanistic (ablation confirmed single-step integration is the driver)
 - ✅ Falsifiable (vocab >10K predicted to break it)
 - ✅ Counter-intuitive (literature favors multi-stage RAG)
-- ✅ Quantitative (+0.034 ± 0.011 cm_F1, p<0.001)
+- ✅ Quantitative (+0.034 ± 0.011 match_F1, p<0.001)
 
 → Added to findings_catalogue as F001.
 
 ## Example: A non-passing finding
 
-Hypothesized: H005 "MIMIC-III has 5% non-analyte itemids"
+Hypothesized: H005 "BENCH-A has 5% non-analyte itemids"
 
 - ❌ Single domain
 - ❌ Descriptive not mechanistic

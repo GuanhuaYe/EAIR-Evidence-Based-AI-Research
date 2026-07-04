@@ -75,19 +75,19 @@ eval_protocol:
 
 arms:
   treatment:
-    description: "Constrained-letter LLM rerank (kg_v31_reranker.LLMReranker)"
-    code_path: kg/kg_v31_reranker.py
+    description: "Single-step joint scoring (joint_scorer.JointScorer)"
+    code_path: scorers/joint_scorer.py
     config_overlay:
-      rerank: constrained_letter
+      rerank: joint_scoring
       rerank_model: Qwen2.5-7B-Instruct
       kg_candidates_k: 28
     purpose: "Test the hypothesis directly"
 
   alt_arm:
-    description: "Sentence-transformer rerank + Qwen-14B router (scripts/within_bucket_rerank.py)"
-    code_path: scripts/within_bucket_rerank.py
+    description: "Two-stage retrieve-then-rank + router (scripts/two_stage_rank.py)"
+    code_path: scripts/two_stage_rank.py
     config_overlay:
-      rerank: sentence_transformer
+      rerank: two_stage
       rerank_model: all-MiniLM-L6-v2
       router_model: Qwen2.5-14B-Instruct
       kg_candidates_k: 28
@@ -102,9 +102,9 @@ arms:
 
   ablation_K12:
     description: "Treatment with K=12 (rule out K-confound)"
-    code_path: kg/kg_v31_reranker.py
+    code_path: scorers/joint_scorer.py
     config_overlay:
-      rerank: constrained_letter
+      rerank: joint_scoring
       kg_candidates_k: 12
     purpose: "Rule out K as the cause of treatment win"
 
@@ -113,10 +113,10 @@ arms:
     config_overlay:
       kg_anchor: disabled
       rerank: none
-    purpose: "Confirm KG matters; should produce ~0 cm_F1"
+    purpose: "Confirm KG matters; should produce ~0 match_F1"
 
 varied_params:
-  - rerank: ["constrained_letter", "sentence_transformer", "none"]
+  - rerank: ["joint_scoring", "two_stage", "none"]
   - kg_candidates_k: [12, 28]
   - kg_anchor: ["enabled", "disabled"]
 

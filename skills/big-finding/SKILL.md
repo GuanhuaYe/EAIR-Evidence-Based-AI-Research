@@ -47,7 +47,7 @@ Four principles:
    explicit and traceable.
 
 3. **The goal is the smallest set of PROVEN findings that
-   generalize.** "Better on MIMIC-III by +0.03" is not a finding.
+   generalize.** "Better on BENCH-A by +0.03" is not a finding.
    "X mechanism beats Y mechanism across N distinct domains with
    stat-sig effect" is a finding. Anything less is a step on the
    path. In evidence-hierarchy terms: an audited bundle verdict is
@@ -124,13 +124,13 @@ OUTPUT: 1-3 candidate hypotheses, each with:
 
 | Field | Format | Example |
 |---|---|---|
-| `short` | ≤15 words declarative | "Constrained-letter LLM rerank beats sentence-transformer in narrow-domain disambiguation" |
-| `falsifiable_form` | concrete metric + threshold | "MIMIC-III cm_F1: letter ≥ sentence-transformer by ≥0.02, paired-t p<0.05, sign 4+/5 seeds" |
-| `generalization_scope` | the population it should hold over | "all narrow-domain (vocab ≤ 10K) candidate-disambiguation tasks" |
-| `mechanism_claim` | causal story | "single-step constrained generation integrates all context; two-stage pipeline loses information per stage" |
-| `alternatives_to_rule_out` | rival explanations | "(a) confound: different K; (b) noise from different seeds; (c) sentence-transformer model under-tuned" |
-| `kill_criteria` | what makes it dead | "if letter < ST on any single dataset under controlled K, REFUTED" |
-| `literature_grounding` | key sources scanned + what they imply (search date) | "WebSearch 2026-07: [Xu'24] constrained decoding aids low-resource NER, no prior test on clinical-code disambiguation → novel; [Lee'23] reports K-mismatch confound → added to alternatives" |
+| `short` | ≤15 words declarative | "single-step joint scoring beats two-stage retrieve-then-rank in small-catalog candidate matching" |
+| `falsifiable_form` | concrete metric + threshold | "BENCH-A match_F1: joint ≥ two-stage by ≥0.02, paired-t p<0.05, sign 4+/5 seeds" |
+| `generalization_scope` | the population it should hold over | "all small-catalog (vocab ≤ 10K) candidate-matching tasks" |
+| `mechanism_claim` | causal story | "single-step joint scoring integrates all context; two-stage pipeline loses information per stage" |
+| `alternatives_to_rule_out` | rival explanations | "(a) confound: different K; (b) noise from different seeds; (c) two-stage model under-tuned" |
+| `kill_criteria` | what makes it dead | "if joint < two-stage on any single dataset under controlled K, REFUTED" |
+| `literature_grounding` | key sources scanned + what they imply (search date) | "WebSearch 2026-07: [Xu'24] joint scoring aids low-resource matching, no prior test on small-catalog candidate matching → novel; [Lee'23] reports K-mismatch confound → added to alternatives" |
 
 If user asks vague question ("is X better than Y"), the skill MUST
 push back: "what's the generalization scope, what threshold counts
@@ -212,7 +212,7 @@ Decision for next iteration:
 
 A finding passes the bar iff ALL FIVE hold:
 
-1. **Generalizes** across ≥3 distinct domains/datasets, NOT MIMIC
+1. **Generalizes** across ≥3 distinct domains/datasets, NOT BENCH-A
    variants. Different vocabulary, different task, different
    distribution.
 2. **Mechanistic** — has a causal story tested by ablation. Not
