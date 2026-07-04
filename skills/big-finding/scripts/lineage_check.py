@@ -101,7 +101,7 @@ def check_shared_protocol(bundle, errors, warnings):
     if "eval_protocol" not in bundle:
         errors.append("bundle missing top-level `eval_protocol`")
     if "hardware" not in bundle:
-        warnings.append("bundle missing top-level `hardware` — recommend specifying A100-80GB / 4090")
+        warnings.append("bundle missing top-level `hardware` — recommend specifying datacenter-80gb / consumer-24gb")
 
     # No arm should override seed_list
     for name, spec in arms.items():

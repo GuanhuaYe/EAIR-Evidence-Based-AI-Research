@@ -66,7 +66,7 @@ created: 2026-06-29
 code_hash: sha256:<git-sha or content-hash if no git>
 data_hash: sha256:<hash of data partition files>
 seed_list: [1, 2, 3, 4, 5]
-hardware: A100-80GB
+hardware: datacenter-80gb
 eval_protocol:
   split_key: subject_id
   injection_seed_base: 1000
@@ -147,7 +147,7 @@ If any check fails → bundle REJECTED, do not launch.
 
 - **Same code version**: All arms run against the SAME commit / file mtime. If you must mix versions, document why and treat the comparison as exploratory not confirmatory.
 - **Same eval data**: Same split key, same injection seed base, same n_errors_per_type, same error_types list.
-- **Same hardware**: A100 vs 4090 vs RTX-4090 can have throughput differences and rare numerical differences. Note hardware class.
+- **Same hardware**: datacenter-80gb vs consumer-24gb can have throughput differences and rare numerical differences. Note hardware class.
 - **Same vLLM build**: vLLM 0.21.0 vs 0.21.1 may have subtle sampling differences. Pin the build.
 - **Same prompt template**: If prompt text differs across arms (other than the controlled variable), the comparison is invalid.
 

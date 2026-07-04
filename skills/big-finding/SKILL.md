@@ -152,7 +152,7 @@ All arms MUST share:
 - Same git SHA / code version (recorded as `code_hash`)
 - Same data partition (recorded as `data_hash`)
 - Same hyper-params except the ONE being varied per arm
-- Same hardware class (A100 80GB / 4090 24GB — recorded)
+- Same hardware class (datacenter-80gb / consumer-24gb — recorded)
 - Same seed list, same number of seeds
 - Same eval protocol (split key, n_eval_test, error injection seed)
 

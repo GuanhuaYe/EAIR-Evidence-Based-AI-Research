@@ -66,7 +66,7 @@ exploration. Stored at `<paper_dir>/big_finding/tree.json`.
     "start": "ISO 8601",
     "end": "ISO 8601"
   },
-  "hardware": "A100-80GB",
+  "hardware": "datacenter-80gb",
   "vllm_build": "0.21",
   "result_path": "experiments/E001/results.json",
   "decision_path": "experiments/E001/decision.md",
@@ -106,7 +106,7 @@ status is `status_history[-1].status`.
 
 ```
 └── H001 [PROVEN] Constrained-letter rerank beats sentence-transformer in narrow disambiguation
-    │   E001: PROVEN (paired-t p=0.003, n=5, hardware A100, 4.2 GPU-h)
+    │   E001: PROVEN (paired-t p=0.003, n=5, hardware datacenter-80gb, 4.2 GPU-h)
     │   E002: CONFOUNDED (K-ablation: K=12 reverses sign — needs deeper dive)
     │
     ├── H002 [OPEN] Letter-rerank advantage scales with vocab size (K-effect mechanism)

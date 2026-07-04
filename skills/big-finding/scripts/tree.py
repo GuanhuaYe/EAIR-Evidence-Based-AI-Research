@@ -261,7 +261,7 @@ def main():
     s.add_argument("--data-hash")
     s.add_argument("--protocol-hash")
     s.add_argument("--decision-rule")
-    s.add_argument("--hardware", default="A100-80GB")
+    s.add_argument("--hardware", default="datacenter-80gb")
     s.add_argument("--vllm-build", default="0.21")
     s.set_defaults(func=cmd_add_experiment)
 

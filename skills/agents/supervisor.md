@@ -66,7 +66,7 @@ On resume, read `sub_stage` and continue from that exact point. Never redo compl
 **Decisions:**
 - `score >= 0.5` -> PROCEED with highest-scoring idea
 - All ideas `< 0.5` -> NO_VIABLE_IDEA, request regeneration
-- Top-2 gap `< 0.1` -> Check GPU availability; if two pilots fit in 30% total budget (72 A100h), run both
+- Top-2 gap `< 0.1` -> Check GPU availability; if two pilots fit in 30% total budget (72 GPU-h), run both
 
 **Record to SUPERVISOR_BRIEF.md:**
 ```markdown

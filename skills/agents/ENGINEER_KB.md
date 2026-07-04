@@ -11,16 +11,16 @@ performance review.
 (Generic reference specs — NOT a specific machine. Replace with your own host's
 actual GPU count and layout.)
 
-| GPU | VRAM | Bandwidth | FP16 TFLOPS | Notes |
+| GPU | VRAM | Bandwidth | FP16 compute | Notes |
 |-----|------|-----------|-------------|-------|
-| RTX 4090 (consumer, Ada) | 24GB | 1008 GB/s | 165 (FP16) | Best for <14GB models; PCIe only, no NVLink |
-| A100-SXM4-80GB | 80GB | 2039 GB/s | 312 (FP16) | ~2x 4090 bandwidth; NVLink for fast multi-GPU; best for large models |
+| consumer-24gb | 24GB | baseline | lower | Best for <14GB models; PCIe-only, no fast multi-GPU interconnect |
+| datacenter-80gb | 80GB | ~2x consumer | higher | ~2x consumer bandwidth; NVLink-class interconnect for fast multi-GPU; best for large models |
 
 **Key perf differences:**
-- A100 has 2x memory bandwidth → memory-bound ops (attention, large batch inference) ~2x faster
-- RTX 4090 has better FP16 compute density per watt but less VRAM
-- A100 SXM4 has NVLink — multi-GPU comms fast. 4090 is PCIe only.
-- For OLMoE-1B-7B (~14GB bf16): fits on 4090, faster on A100 due to bandwidth
+- The datacenter GPU has ~2x memory bandwidth → memory-bound ops (attention, large batch inference) ~2x faster
+- The consumer GPU has better FP16 compute density per watt but less VRAM
+- The datacenter GPU has an NVLink-class interconnect — multi-GPU comms fast. The consumer GPU is PCIe-only.
+- For OLMoE-1B-7B (~14GB bf16): fits on the consumer GPU, faster on the datacenter GPU due to bandwidth
 
 **CPU/RAM:** (update when known)
 **Disk:** (update when known)
@@ -42,11 +42,11 @@ actual GPU count and layout.)
 (Illustrative entries from a reference project — replace with your own. Run
 IDs like `pilot-NNN` / `formal-NNN` below are example labels, not real runs.)
 
-### OLMoE-1B-7B on RTX 4090
+### OLMoE-1B-7B on the consumer GPU
 - **KV-cache reuse for oracle gaps:** Collect KV cache for prefix once, eval each expert with single-position attention. ~2.3s/it → 60x speedup over naive (91s/it). (example run)
 - **Per-expert forward pass:** 64 experts × 16 MoE layers, but only eval 4 target layers. Main bottleneck is the expert loop at each target layer.
 - **VRAM:** Model ~14GB + KV cache ~56MB + peak activations ~1.5GB = ~16.5GB / 24GB.
-- **Batch perplexity:** batch_size=8-16 safe on 4090 for this model.
+- **Batch perplexity:** batch_size=8-16 safe on the consumer GPU for this model.
 
 ### General Optimization Patterns
 | Problem | Method | Speedup | Risk | First Used |
@@ -68,13 +68,13 @@ IDs like `pilot-NNN` / `formal-NNN` below are example labels, not real runs.)
 
 | Model | GPU | Task | Speed | Notes |
 |-------|-----|------|-------|-------|
-| OLMoE-1B-7B | RTX 4090 | Oracle gap collection (KV-cache) | ~1.7s/text | formal-001-crr Step A |
-| OLMoE-1B-7B | RTX 4090 | Perplexity eval | ~2s/batch (bs=8) | Estimate |
-| OLMoE-1B-7B | RTX 4090 | CRR real forward pass eval | ~8-11 tok/s | formal-001-crr Step D |
-| OLMoE-1B-7B | RTX 4090 | Benchmark eval (HF naive) | ~24 min for 7 benchmarks | formal-001-crr Step E |
-| OLMoE-1B-7B | RTX 4090 | Gamma search (5 values, sequential) | 54.5 min | formal-001-crr Step D |
-| OLMoE-1B-7B | RTX 4090 | Condition eval (3 seeds, sequential) | 50.5 min | formal-001-crr Step C/D |
-| OLMoE-1B-7B | A100 | Oracle gap collection | ~0.8-1.0s/text | Estimate (2x bandwidth) |
+| OLMoE-1B-7B | consumer-24gb | Oracle gap collection (KV-cache) | ~1.7s/text | formal-001-crr Step A |
+| OLMoE-1B-7B | consumer-24gb | Perplexity eval | ~2s/batch (bs=8) | Estimate |
+| OLMoE-1B-7B | consumer-24gb | CRR real forward pass eval | ~8-11 tok/s | formal-001-crr Step D |
+| OLMoE-1B-7B | consumer-24gb | Benchmark eval (HF naive) | ~24 min for 7 benchmarks | formal-001-crr Step E |
+| OLMoE-1B-7B | consumer-24gb | Gamma search (5 values, sequential) | 54.5 min | formal-001-crr Step D |
+| OLMoE-1B-7B | consumer-24gb | Condition eval (3 seeds, sequential) | 50.5 min | formal-001-crr Step C/D |
+| OLMoE-1B-7B | datacenter-80gb | Oracle gap collection | ~0.8-1.0s/text | Estimate (2x bandwidth) |
 
 ## 5. Update Log
 

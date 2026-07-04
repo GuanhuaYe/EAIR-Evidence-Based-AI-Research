@@ -178,7 +178,7 @@ Replaces human checkpoints. Automatically performs reviews and makes go/no-go de
 2. Compute composite score: `score = 0.4 * novelty + 0.3 * feasibility + 0.3 * impact`
    - **novelty** (0-1): novelty score from CP2. If `confidence: "LOW"` (SerpAPI unavailable), cap at 0.6
    - **feasibility** (0-1): **compute-based calculation** ([M1] fix):
-     - Estimate required A100-hours for the idea (refer to references/compute_heuristics.md)
+     - Estimate required GPU-hours for the idea (refer to references/compute_heuristics.md)
      - `feasibility = clamp(1.0 - estimated_hours / 100, 0, 1)`
      - Example: estimated 30h → feasibility=0.7; estimated 120h → feasibility=0 (over budget)
    - **impact** (0-1): proxy metric based on knowledge base data:
@@ -189,7 +189,7 @@ Replaces human checkpoints. Automatically performs reviews and makes go/no-go de
    - Select the highest-scoring idea (if score >0.5)
    - If all ideas score <0.5 → output "NO VIABLE IDEA", suggest re-generating
    - If the top-2 score gap is <0.1 → **first execute CP3 (Resource Audit) to check if there are enough GPUs for parallel runs** ([M6] fix):
-     - Two pilots combined budget ≤30% of total budget (≤72 A100h) → pilot both simultaneously
+     - Two pilots combined budget ≤30% of total budget (≤72 GPU-h) → pilot both simultaneously
      - Otherwise → sequentially pilot the higher-scoring one
 4. Write decision to PIPELINE_STATE.json:
    ```json
@@ -354,7 +354,7 @@ All experiment scripts must output a metrics.json conforming to the following sc
   ],
   "compute_cost": {
     "gpu_hours": 2.5,
-    "gpu_type": "A100-80GB"
+    "gpu_type": "datacenter-80gb"
   },
   "competitor_comparison": {
     "name": "C3PO",

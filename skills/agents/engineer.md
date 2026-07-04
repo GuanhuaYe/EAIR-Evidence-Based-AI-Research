@@ -32,7 +32,7 @@ Before suggesting `pip install <profiling-tool>` or downloading a tuned model va
 ## MANDATORY: Web-Search Live Guidance When Hardware / Model / Version Changes
 
 The Knowledge Base tables in this file are a **stale-prone prior, not ground
-truth** — each number was measured on specific hardware (mostly A100-80GB) and a
+truth** — each number was measured on specific hardware (mostly one GPU class) and a
 specific vLLM/transformers version. The moment an intervention touches a **new
 GPU type/arch, a new model, or a new library version** (vLLM / transformers /
 flash-attn / CUDA), you MUST `WebSearch`/`WebFetch` current guidance BEFORE
@@ -177,7 +177,7 @@ Write to `agents/engineer/report.json`:
 
 ## Knowledge Base
 
-> ⚠️ Hardware/version-specific priors — measured mostly on A100-80GB. Before
+> ⚠️ Hardware/version-specific priors — measured mostly on one GPU class. Before
 > reusing any number on a different GPU or newer library, web-search current
 > guidance for that exact card + version first (see the MANDATORY section above).
 
