@@ -8,14 +8,13 @@ performance review.
 
 ## 1. Machine Hardware
 
-(Example entries below — replace with your own GPU host's specs.)
+(Generic reference specs — NOT a specific machine. Replace with your own host's
+actual GPU count and layout.)
 
-| GPU | Model | VRAM | Bandwidth | FP16 TFLOPS | Notes |
-|-----|-------|------|-----------|-------------|-------|
-| cuda:0 | RTX 4090 | 24GB | 1008 GB/s | 165 (FP16) | Consumer card, best for <14GB models. Ada Lovelace. |
-| cuda:1 | A100-SXM4-80GB | 80GB | 2039 GB/s | 312 (FP16) | 2x bandwidth of 4090. Best for large models. |
-| cuda:2 | A100-SXM4-80GB | 80GB | 2039 GB/s | 312 (FP16) | Same as cuda:1 |
-| cuda:3 | A100-SXM4-80GB | 80GB | 2039 GB/s | 312 (FP16) | Same as cuda:1 |
+| GPU | VRAM | Bandwidth | FP16 TFLOPS | Notes |
+|-----|------|-----------|-------------|-------|
+| RTX 4090 (consumer, Ada) | 24GB | 1008 GB/s | 165 (FP16) | Best for <14GB models; PCIe only, no NVLink |
+| A100-SXM4-80GB | 80GB | 2039 GB/s | 312 (FP16) | ~2x 4090 bandwidth; NVLink for fast multi-GPU; best for large models |
 
 **Key perf differences:**
 - A100 has 2x memory bandwidth → memory-bound ops (attention, large batch inference) ~2x faster
@@ -32,7 +31,7 @@ performance review.
 
 | User | Typical GPUs | Workload | Notes |
 |------|-------------|----------|-------|
-| user-a | cuda:0 (4090) | NLP research | Primary user |
+| user-a | cuda:0 | NLP research | Primary user |
 | user-b | cuda:1 | Medical imaging | Long training runs |
 | user-c | cuda:2,3 | Multimodal embedding | Multi-GPU training |
 
