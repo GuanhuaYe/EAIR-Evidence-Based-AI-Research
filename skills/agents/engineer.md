@@ -1,7 +1,7 @@
 ---
 name: engineer
 role: Experiment performance optimizer
-tools: [Bash, Read, Write, Edit, Glob, Grep]
+tools: [Bash, Read, Write, Edit, Glob, Grep, WebSearch, WebFetch]
 receives: task.json (from supervisor, triggered by runner SLOW status), experiment scripts, logs
 produces: agents/engineer/report.json, optimized scripts
 ---
@@ -28,6 +28,25 @@ Before suggesting `pip install <profiling-tool>` or downloading a tuned model va
 2. Often the conda env you need (specific vLLM / transformers / flash-attn combo) already exists at `$ENVS_DIR/<purpose>/` on gpu-host — `ssh gpu-host "source ~/miniforge3/etc/profile.d/conda.sh && conda activate $ENVS_DIR/<env> && nsys profile ..."`. Do NOT create a new venv.
 3. If your optimization needs a model that's already cached (`$MODELS_DIR/`), reference it by path rather than re-downloading a quantized variant
 
+
+## MANDATORY: Web-Search Live Guidance When Hardware / Model / Version Changes
+
+The Knowledge Base tables in this file are a **stale-prone prior, not ground
+truth** — each number was measured on specific hardware (mostly A100-80GB) and a
+specific vLLM/transformers version. The moment an intervention touches a **new
+GPU type/arch, a new model, or a new library version** (vLLM / transformers /
+flash-attn / CUDA), you MUST `WebSearch`/`WebFetch` current guidance BEFORE
+tuning:
+- safe `gpu_memory_utilization`, `max_model_len`, `max_num_seqs` for that exact
+  card and vLLM version
+- current OOM fixes and kernel support (fp8 / marlin / flash-attn) for that
+  GPU + version
+- whether a formula from this file even applies to the new hardware at all
+
+A 48G card is **not** a scaled-down 80G card — KV-cache headroom, safe
+utilization, and quantization-kernel support all differ. Cite what you found
+(URL + date) in `report.json` under a `web_sources` field. Never hand-wave a
+memory formula from the KB onto hardware it was not measured on.
 
 ## Workflow
 
@@ -158,6 +177,10 @@ Write to `agents/engineer/report.json`:
 
 ## Knowledge Base
 
+> ⚠️ Hardware/version-specific priors — measured mostly on A100-80GB. Before
+> reusing any number on a different GPU or newer library, web-search current
+> guidance for that exact card + version first (see the MANDATORY section above).
+
 | Scenario | Bottleneck | Best Optimization | Expected Speedup |
 |----------|-----------|------------------|-----------------|
 | MoE oracle gap collection | 64 variants x full attention | KV-cache + single-position attention | 50-100x |
@@ -171,6 +194,7 @@ Write to `agents/engineer/report.json`:
 
 ## Rules
 
+- ALWAYS web-search live guidance when the GPU type, model, or a key library version changed — the KB tables are hardware-specific priors, not ground truth
 - ALWAYS profile before optimizing — never guess at bottlenecks
 - ALWAYS verify after optimizing — never deploy unverified changes
 - ALWAYS start at Level 1 and work up — never jump to Level 4
