@@ -239,7 +239,7 @@ problem EAIR is built around.
 Type this line to your agent:
 
 ```
-Install https://github.com/GuanhuaYe/EAIR for me
+Install https://github.com/GuanhuaYe/EAIR-Evidence-Based-AI-Research for me
 ```
 
 It will clone the repo and run `./install.sh`, which symlinks the skills
@@ -248,7 +248,7 @@ into `~/.claude/skills`. No configuration needed.
 By hand, if you prefer:
 
 ```bash
-git clone https://github.com/GuanhuaYe/EAIR.git
+git clone https://github.com/GuanhuaYe/EAIR-Evidence-Based-AI-Research.git EAIR
 cd EAIR && ./install.sh
 ./install.sh --check
 ```
